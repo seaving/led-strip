@@ -1,0 +1,55 @@
+C51 COMPILER V9.53.0.0   CACHE                                                             02/16/2021 14:57:44 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE CACHE
+OBJECT MODULE PLACED IN .\cache.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\FRAME\cache.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM
+                    -;..\DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\cache.lst) TABS(2) OBJECT(.\cache.obj)
+
+line level    source
+
+   1          #include "cache.h"
+   2          
+   3          xdata uint8_t   cache_r[2][LED_MAX_NUM] = {0};     //显存
+   4          xdata uint8_t   cache_g[2][LED_MAX_NUM] = {0};     //显存
+   5          xdata uint8_t   cache_b[2][LED_MAX_NUM] = {0};     //显存
+   6          
+   7          xdata action_t  actions[ACTION_COUNT] = {0};      //动画缓存
+   8          
+   9          data uint8_t    ic_num = 50;                    //实际灯条IC数量
+  10          //data ic_type_t  ic_type = E_IC_TYPE_UCS1903_HS;    //IC型号
+  11          
+  12          void cache_set_pixel(uint8_t index, uint8_t addr, uint8_t r, uint8_t g, uint8_t b)
+  13          {
+  14   1          cache_set_pixel_r(index, addr, r);
+  15   1          cache_set_pixel_g(index, addr, g);
+  16   1          cache_set_pixel_b(index, addr, b);
+  17   1      }
+  18          
+  19          void cache_clear(uint8_t index)
+  20          {
+  21   1          memset(&cache_r[index][0], 0, ic_num);
+  22   1          memset(&cache_r[index][0], 0, ic_num);
+  23   1          memset(&cache_r[index][0], 0, ic_num);
+  24   1      }
+  25          
+  26          void cache_set(uint8_t index, uint8_t start, uint8_t len, uint8_t r, uint8_t g, uint8_t b)
+  27          {
+  28   1          memset(&cache_r[index][0] + start, r, len);
+  29   1          memset(&cache_g[index][0] + start, g, len);
+  30   1          memset(&cache_b[index][0] + start, b, len);  
+  31   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    209    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    440    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1      12
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

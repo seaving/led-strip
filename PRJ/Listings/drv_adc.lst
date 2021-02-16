@@ -1,0 +1,86 @@
+C51 COMPILER V9.53.0.0   DRV_ADC                                                           02/16/2021 14:57:48 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE DRV_ADC
+OBJECT MODULE PLACED IN .\drv_adc.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\DRV\drv_adc.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM;..\
+                    -DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\drv_adc.lst) TABS(2) OBJECT(.\drv_adc.obj)
+
+line level    source
+
+   1          #include "drv_adc.h"
+   2          
+   3          void drv_adc_init(void)
+   4          {
+   5   1          //P5M0 &= 0xDF;     //P5.5引脚为高阻输入模式
+   6   1          P5M0 &= 0xEF;     //P5.4引脚为高阻输入模式
+   7   1          //P5M1 |= 0x20;     //P5.5引脚为高阻输入模式
+   8   1          P5M1 |= 0x10;     //P5.4引脚为高阻输入模式
+   9   1          //ADC_CONTR = 0x05;     //选定P5.5引脚作为ADC模拟电压输入引脚
+  10   1          ADC_CONTR = 0x04;     //选定P5.4引脚作为ADC模拟电压输入引脚
+  11   1          ADCCFG = 0x02;        //转换结果左对齐且ADC转换需512个CPU时钟
+  12   1          ADC_CONTR |= 0x80;      //打开ADC电源
+  13   1          ADC_CONTR |= 0x40;      //启动ADC转换
+  14   1      }
+  15          
+  16          uint16_t drv_adc_value(void)
+  17          {
+  18   1          data uint16_t adc_value = 0;
+  19   1      
+  20   1          while (! (ADC_CONTR & 0x20)); //等待ADC转换结束
+  21   1          ADC_CONTR &= 0xDF;          //清零ADC转换结束标志位
+  22   1      
+  23   1          adc_value = ADC_RES << 2;
+  24   1          adc_value |= ADC_RESL >> 6;   //处理左对齐格式下的ADC结果
+  25   1      
+  26   1          ADC_CONTR |= 0x40;          //启动ADC转换
+  27   1      
+  28   1          return adc_value;
+  29   1      }
+  30          
+  31          #if 0
+              #include "drv_uart.h"
+              static void _delay(uint16_t Count)
+              {
+                uint8_t i,j;
+                while (Count--) //Count形参控制延时次数
+                {
+                  for(i=0;i<50;i++)
+                    for(j=0;j<20;j++);
+                }
+              }
+              
+              void drv_adc_test(void)
+              {
+                  uint16_t adc_v = 0;
+                  float vin = 0;
+                  drv_uart_init(35000000, 9600);
+                  drv_adc_init();
+                  _delay(1000);
+                  printf("start>>>>>\r\n");
+                  while (1)
+                  {
+                      adc_v = drv_adc_value();
+                      vin = adc_v * 0.00322266;
+C51 COMPILER V9.53.0.0   DRV_ADC                                                           02/16/2021 14:57:48 PAGE 2   
+
+                      printf("%d >> ", adc_v);
+                      printf("%f \r\n", vin);
+                      _delay(1000);
+                  }
+              }
+              #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     53    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

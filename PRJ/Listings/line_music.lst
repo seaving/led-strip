@@ -1,0 +1,57 @@
+C51 COMPILER V9.53.0.0   LINE_MUSIC                                                        02/16/2021 14:57:47 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE LINE_MUSIC
+OBJECT MODULE PLACED IN .\line_music.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\line_music.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM;
+                    -..\DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\line_music.lst) TABS(2) OBJECT(.\line_music.obj)
+
+line level    source
+
+   1          #include "line_music.h"
+   2          #include "colors.h"
+   3          #include "color_ctrl.h"
+   4          #include "position_ctrl.h"
+   5          #include "cache.h"
+   6          #include "player.h"
+   7          
+   8          void line_music_set(flush_param_t *param)
+   9          {
+  10   1          data uint8_t action_index = 0;
+  11   1      
+  12   1          param->color_index = param->color_index % COLOR_HSV_ARRAY1_ROWS;
+  13   1      
+  14   1          if (param->fade_interval == 0)
+  15   1          {
+  16   2              param->fade_type = E_FADE_TYPE_BREATH;
+  17   2          }
+  18   1      
+  19   1          ctrl_set(param, 10, 1, 1, 5, action_index, 0, 49, E_POSITION_TYPE_MUSIC_KEEP, 0, 0, 0);
+  20   1      
+  21   1          actions[action_index].hsv.v = param->adjust;
+  22   1          actions[action_index].fre_index = 1;
+  23   1      
+  24   1          if (param->is_static_color)
+  25   1          {
+  26   2              param->mode = E_LINE_MUSIC_MODE_SINGLE;
+  27   2          }
+  28   1      
+  29   1          flush_fade_music_init(param, action_index, param->mode == E_LINE_MUSIC_MODE_SINGLE);
+  30   1      
+  31   1          //把配置的action设置到播放器
+  32   1          player_set(0, 0, action_index, 0, true);
+  33   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    198    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

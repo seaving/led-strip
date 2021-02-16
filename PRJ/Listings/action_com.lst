@@ -1,0 +1,172 @@
+C51 COMPILER V9.53.0.0   ACTION_COM                                                        02/16/2021 14:57:46 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE ACTION_COM
+OBJECT MODULE PLACED IN .\action_com.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\action_com.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM;
+                    -..\DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\action_com.lst) TABS(2) OBJECT(.\action_com.obj)
+
+line level    source
+
+   1          #include "action_com.h"
+   2          #include "color_ctrl.h"
+   3          #include "position_ctrl.h"
+   4          #include "cache.h"
+   5          
+   6          void flush_fade_init(flush_param_t *param, uint8_t action_index, bit is_single)
+   7          {
+   8   1          actions[action_index].hsv.v = param->adjust;
+   9   1      
+  10   1          if (is_single)
+  11   1          {
+  12   2              actions[action_index].hsv.h = COLOR1_HSV_H(param->color_index);
+  13   2              actions[action_index].hsv.s = COLOR1_HSV_S(param->color_index);
+  14   2              actions[action_index].hsv.v = COLOR1_HSV_V(param->color_index);
+  15   2      
+  16   2              if (param->fade_type == E_FADE_TYPE_KEEP)
+  17   2              {
+  18   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SINGLE_KEEP);
+  19   3              }
+  20   2              else if (param->fade_type == E_FADE_TYPE_BREATH)
+  21   2              {
+  22   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SINGLE_BREATH_V)
+             -;
+  23   3              }
+  24   2              else if (param->fade_type == E_FADE_TYPE_FADE)
+  25   2              {
+  26   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SINGLE_BREATH_S)
+             -;
+  27   3              }
+  28   2              else if (param->fade_type == E_FADE_TYPE_SMOOTH)
+  29   2              {
+  30   3                  actions[action_index].hsv.s = 100;
+  31   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SMOOTH_BREATH_H)
+             -;
+  32   3              }
+  33   2          }
+  34   1          else
+  35   1          {
+  36   2              if (param->fade_type == E_FADE_TYPE_KEEP)
+  37   2              {
+  38   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_RANDOM_KEEP);
+  39   3              }
+  40   2              else if (param->fade_type == E_FADE_TYPE_BREATH)
+  41   2              {
+  42   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_RANDOM_BREATH_V)
+             -;
+  43   3              }
+  44   2              else if (param->fade_type == E_FADE_TYPE_FADE)
+  45   2              {
+  46   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_RANDOM_BREATH_S)
+             -;
+  47   3              }
+  48   2              else if (param->fade_type == E_FADE_TYPE_SMOOTH)
+  49   2              {
+C51 COMPILER V9.53.0.0   ACTION_COM                                                        02/16/2021 14:57:46 PAGE 2   
+
+  50   3                  actions[action_index].hsv.s = 100;
+  51   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SMOOTH_BREATH_H)
+             -;
+  52   3              }
+  53   2          }
+  54   1      }
+  55          
+  56          void flush_fade_music_init(flush_param_t *param, uint8_t action_index, bit is_single)
+  57          {
+  58   1          actions[action_index].hsv.v = param->adjust;
+  59   1      
+  60   1          if (is_single)
+  61   1          {
+  62   2              actions[action_index].hsv.h = COLOR1_HSV_H(param->color_index);
+  63   2              actions[action_index].hsv.s = COLOR1_HSV_S(param->color_index);
+  64   2              actions[action_index].hsv.v = COLOR1_HSV_V(param->color_index);
+  65   2      
+  66   2              if (param->fade_type == E_FADE_TYPE_KEEP)
+  67   2              {
+  68   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_MUSIC_SINGLE_KEE
+             -P);
+  69   3              }
+  70   2              else if (param->fade_type == E_FADE_TYPE_BREATH)
+  71   2              {
+  72   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_MUSIC_SINGLE_BRE
+             -ATH_V);
+  73   3              }
+  74   2              else if (param->fade_type == E_FADE_TYPE_FADE)
+  75   2              {
+  76   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SINGLE_BREATH_S)
+             -;
+  77   3              }
+  78   2              else if (param->fade_type == E_FADE_TYPE_SMOOTH)
+  79   2              {
+  80   3                  actions[action_index].hsv.s = 100;
+  81   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SMOOTH_BREATH_H)
+             -;
+  82   3              }
+  83   2          }
+  84   1          else
+  85   1          {
+  86   2              if (param->fade_type == E_FADE_TYPE_KEEP)
+  87   2              {
+  88   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_MUSIC_RANDOM_KEE
+             -P);
+  89   3              }
+  90   2              else if (param->fade_type == E_FADE_TYPE_BREATH)
+  91   2              {
+  92   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_MUSIC_RANDOM_BRE
+             -ATH_V);
+  93   3              }
+  94   2              else if (param->fade_type == E_FADE_TYPE_FADE)
+  95   2              {
+  96   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_RANDOM_BREATH_S)
+             -;
+  97   3              }
+  98   2              else if (param->fade_type == E_FADE_TYPE_SMOOTH)
+  99   2              {
+ 100   3                  actions[action_index].hsv.s = 100;
+ 101   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SMOOTH_BREATH_H)
+             -;
+ 102   3              }
+C51 COMPILER V9.53.0.0   ACTION_COM                                                        02/16/2021 14:57:46 PAGE 3   
+
+ 103   2          }
+ 104   1      }
+ 105          
+ 106          void ctrl_set(flush_param_t *param, uint8_t random_interval_level, uint8_t d_h, uint8_t d_s, uint8_t d_v, 
+ 107              uint8_t action_index, uint8_t start, uint8_t end, position_type_t position_type, 
+ 108              uint8_t adorn_index, bit is_adorn_random, uint8_t adorn_random_level)
+ 109          {
+ 110   1          COLOR_CTRL_SET_BREATH_INTERVAL(&actions[action_index].color_ctrl, param->fade_interval);
+ 111   1          COLOR_CTRL_SET_RANDOM_INTERVAL_LEVEL(&actions[action_index].color_ctrl, random_interval_level);
+ 112   1          COLOR_CTRL_SET_BRIGHT_ADJUST(param->is_raise_adjust, param->adjust);
+ 113   1          COLOR_CTRL_SET_BREATH_SET_D_H(&actions[action_index].color_ctrl, d_h);
+ 114   1          COLOR_CTRL_SET_BREATH_SET_D_S(&actions[action_index].color_ctrl, d_s);
+ 115   1          COLOR_CTRL_SET_BREATH_SET_D_V(&actions[action_index].color_ctrl, d_v);
+ 116   1          COLOR_CTRL_SET_BREATH_SET_MAX_H_LEVEL(&actions[action_index].color_ctrl, 100);
+ 117   1          COLOR_CTRL_SET_BREATH_SET_MIN_S_LEVEL(&actions[action_index].color_ctrl, 80);
+ 118   1          COLOR_CTRL_SET_BREATH_SET_MAX_V(&actions[action_index].color_ctrl, param->adjust);
+ 119   1      
+ 120   1          COLOR_CTRL_SET_ADORN_INDEX(&actions[action_index].color_ctrl, adorn_index);
+ 121   1          COLOR_CTRL_SET_ADORN_RANDOM(&actions[action_index].color_ctrl, is_adorn_random);
+ 122   1          COLOR_CTRL_SET_ADORN_INVERVAL_LEVEL(&actions[action_index].color_ctrl, adorn_random_level);
+ 123   1      
+ 124   1          POSITION_CTRL_SET_INTERVAL(&actions[action_index].position_ctrl, param->position_interval);
+ 125   1          POSITION_CTRL_SET_INTERVAL_LEN(&actions[action_index].position_ctrl, param->bright_interval_len, param
+             -->dark_interval_len);
+ 126   1          POSITION_CTRL_SET_SECTION(&actions[action_index].position_ctrl, start, end);
+ 127   1      
+ 128   1          POSITION_CTRL_SET_TYPE(&actions[action_index].position_ctrl, position_type);
+ 129   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    769    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      13
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       3
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

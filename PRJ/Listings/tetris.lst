@@ -1,0 +1,104 @@
+C51 COMPILER V9.53.0.0   TETRIS                                                            02/16/2021 14:57:47 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE TETRIS
+OBJECT MODULE PLACED IN .\tetris.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\tetris.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM;..\D
+                    -RV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\tetris.lst) TABS(2) OBJECT(.\tetris.obj)
+
+line level    source
+
+   1          #include "tetris.h"
+   2          #include "cache.h"
+   3          #include "typedef.h"
+   4          #include "player.h"
+   5          
+   6          static void __tetris_set(flush_param_t *param, uint8_t action_index, uint8_t start, uint8_t end, position_
+             -type_t position_type, bool adorn_random)
+   7          {
+   8   1          param->color_index = param->color_index % COLOR_HSV_ARRAY1_ROWS;
+   9   1      
+  10   1          if (param->fade_interval == 0)
+  11   1              param->fade_type = E_FADE_TYPE_KEEP;
+  12   1      
+  13   1          if (param->is_static_color)
+  14   1          {
+  15   2              param->mode = E_TETRIS_MODE_SINGLE;
+  16   2          }
+  17   1      
+  18   1          flush_fade_init(param, action_index, param->mode == E_TETRIS_MODE_SINGLE);
+  19   1      
+  20   1          ctrl_set(param, 1, 1, 1, 5, action_index, start, end, position_type, 15, adorn_random, 5);
+  21   1      }
+  22          
+  23          void tetris_set(flush_param_t *param)
+  24          {
+  25   1          data uint8_t action_index = 0;
+  26   1      
+  27   1          data bool adorn_random = false;
+  28   1          if (E_TETRIS_POSITION_LEFT1 <= param->position && param->position <= E_TETRIS_POSITION_CLOSE1)
+  29   1          {
+  30   2              adorn_random = true;
+  31   2          }
+  32   1      
+  33   1          switch (param->position)
+  34   1          {
+  35   2              case E_TETRIS_POSITION_LEFT:
+  36   2                  __tetris_set(param, action_index, 0, 24, E_POSITION_TYPE_TETRIS_LEFT, adorn_random); action_in
+             -dex ++;
+  37   2                  __tetris_set(param, action_index, 25, 49, E_POSITION_TYPE_TETRIS_LEFT, adorn_random);
+  38   2                  break;
+  39   2              case E_TETRIS_POSITION_LEFT1:
+  40   2                  __tetris_set(param, action_index, 0, 16, E_POSITION_TYPE_TETRIS_LEFT, adorn_random); action_in
+             -dex ++;
+  41   2                  __tetris_set(param, action_index, 17, 33, E_POSITION_TYPE_TETRIS_LEFT, adorn_random); action_i
+             -ndex ++;
+  42   2                  __tetris_set(param, action_index, 34, 49, E_POSITION_TYPE_TETRIS_LEFT, adorn_random);
+  43   2                  break;
+  44   2              case E_TETRIS_POSITION_RIGHT:
+  45   2                  __tetris_set(param, action_index, 0, 24, E_POSITION_TYPE_TETRIS_RIGHT, adorn_random); action_i
+             -ndex ++;
+  46   2                  __tetris_set(param, action_index, 25, 49, E_POSITION_TYPE_TETRIS_RIGHT, adorn_random);
+  47   2                  break;
+  48   2              case E_TETRIS_POSITION_RIGHT1:
+  49   2                  __tetris_set(param, action_index, 0, 16, E_POSITION_TYPE_TETRIS_RIGHT, adorn_random); action_i
+C51 COMPILER V9.53.0.0   TETRIS                                                            02/16/2021 14:57:47 PAGE 2   
+
+             -ndex ++;
+  50   2                  __tetris_set(param, action_index, 17, 33, E_POSITION_TYPE_TETRIS_RIGHT, adorn_random); action_
+             -index ++;
+  51   2                  __tetris_set(param, action_index, 34, 49, E_POSITION_TYPE_TETRIS_RIGHT, adorn_random);
+  52   2                  break;
+  53   2              case E_TETRIS_POSITION_OPEN:
+  54   2              case E_TETRIS_POSITION_OPEN1:
+  55   2                  __tetris_set(param, action_index, 0, 24, E_POSITION_TYPE_TETRIS_LEFT, adorn_random); action_in
+             -dex ++;
+  56   2                  __tetris_set(param, action_index, 25, 49, E_POSITION_TYPE_TETRIS_RIGHT, adorn_random);
+  57   2                  break;
+  58   2              case E_TETRIS_POSITION_CLOSE:
+  59   2              case E_TETRIS_POSITION_CLOSE1:
+  60   2                  __tetris_set(param, action_index, 0, 24, E_POSITION_TYPE_TETRIS_RIGHT, adorn_random); action_i
+             -ndex ++;
+  61   2                  __tetris_set(param, action_index, 25, 49, E_POSITION_TYPE_TETRIS_LEFT, adorn_random);
+  62   2                  break;
+  63   2              default:
+  64   2                  break;
+  65   2          }
+  66   1      
+  67   1          //把配置的action设置到播放器
+  68   1          player_set(0, 0, action_index, 0, true);
+  69   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    414    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      13
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

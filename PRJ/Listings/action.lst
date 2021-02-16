@@ -1,0 +1,25 @@
+C51 COMPILER V9.53.0.0   ACTION                                                            02/16/2021 14:57:44 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE ACTION
+OBJECT MODULE PLACED IN .\action.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\FRAME\action.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\CO
+                    -M;..\DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\action.lst) TABS(2) OBJECT(.\action.obj)
+
+line level    source
+
+   1          #include "action.h"
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,66 @@
+C51 COMPILER V9.53.0.0   HAL_LED                                                           02/16/2021 14:57:48 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE HAL_LED
+OBJECT MODULE PLACED IN .\hal_led.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\HAL\hal_led.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM;..\
+                    -DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\hal_led.lst) TABS(2) OBJECT(.\hal_led.obj)
+
+line level    source
+
+   1          #include "hal_led.h"
+   2          #include "drv_delay.h"
+   3          #include "drv_uc1903_hs.h"
+   4          
+   5          void hal_led_init(/*hal_led_type_t type*/void)
+   6          {
+   7   1          idata uint8_t i = 0;
+   8   1      #if 0
+                  if (type == E_HAL_LED_TYPE_UC1903_HS)
+                  {
+              #endif
+  12   1              drv_uc1903hs_init();
+  13   1              for (i = 0; i < 255; i ++)
+  14   1                  drv_uc1903hs_write(0, 0, 0);
+  15   1              drv_delay(150);
+  16   1      #if 0
+                }
+              #endif
+  19   1      #if 0
+                  else if (type == E_HAL_LED_TYPE_UC1903_LS)
+                  {
+                      drv_uc1903ls_init();
+                      for (i = 0; i < 255; i ++)
+                          drv_uc1903ls_write(0, 0, 0);
+                  }
+              #endif
+  27   1      }
+  28          
+  29          #if 0
+              void hal_led_ctrl_color(hal_led_rgb_t *rgb, hal_led_type_t type)
+              {
+                  if (type == E_HAL_LED_TYPE_UC1903_HS)
+                  {
+                      drv_uc1903hs_write(rgb->red, rgb->green, rgb->blue);
+              
+                }
+                  else if (type == E_HAL_LED_TYPE_UC1903_LS)
+                  {
+                      drv_uc1903ls_write(rgb->red, rgb->green, rgb->blue);
+                  }
+              }
+              #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     34    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----       1
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

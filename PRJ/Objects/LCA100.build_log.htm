@@ -1,0 +1,203 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¦ÌVision V5.11.2.0
+Copyright (C) 2014 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: cai Seaving, cai.ltd, LIC=VG6CK-ZNGKE-6DZKF-6YBPW-46UJ5-UGQT9
+ 
+Tool Versions:
+Toolchain:       PK51 Prof. Developers Kit  Version: 9.53.0.0
+Toolchain Path:  d:\Keil_v5\C51\BIN
+C Compiler:      C51.exe V9.53.0.0
+Assembler:       A51.exe V8.02b
+Linker/Locator:  BL51.exe V6.22
+Library Manager: LIB51.exe V4.30.0.2
+Hex Converter:   OH51.exe V2.7.0.0
+CPU DLL:         S8051.DLL V3.95.0.0
+Dialog DLL:      DP51.DLL V2.62.0.1 
+<h2>Project:</h2>
+E:\work\share\LED\LCA100\PRJ\LCA100.uvproj
+Project File Date:  02/05/2021
+
+<h2>Output:</h2>
+Rebuild target 'Target 1'
+compiling action.c...
+compiling breath.c...
+compiling cache.c...
+compiling color_ctrl.c...
+compiling colors.c...
+compiling hsv.c...
+compiling main.c...
+compiling player.c...
+compiling position_ctrl.c...
+compiling timer.c...
+compiling fft.c...
+compiling mic.c...
+compiling ir.c...
+compiling fountain.c...
+compiling play_action.c...
+compiling hal_led.c...
+compiling drv_adc.c...
+compiling drv_delay.c...
+compiling drv_eeprom.c...
+compiling drv_uart.c...
+compiling drv_uc1903_hs.c...
+compiling drv_ir.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_FFT_DIV?FFT
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_FFT_PILLARS_GET?FFT
+Program Size: data=99.1 xdata=658 code=7227
+creating hex file from "LCA100"...
+"LCA100" - 0 Error(s), 2 Warning(s).
+(s), 2 Warning(s).
+VERLAY PROCESS
+    SEGMENT: ?PR?PLAY_TEST?PLAY_ACTION
+Program Size: data=107.1 xdata=658 code=6942
+creating hex file from ".\Objects\LCA100"...
+".\Objects\LCA100" - 0 Error(s), 4 Warning(s).
+
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?__COLOR_RANDOM?COLOR_CTRL
+    LENGTH:  0009H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?_COLOR_CTRL?COLOR_CTRL
+    LENGTH:  0009H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?__POSITION_CTRL_RANDOM?POSITION_CTRL
+    LENGTH:  0007H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?_ACTION_CTRL?ACTION
+    LENGTH:  0005H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?_FOUNTAIN_SET?FOUNTAIN
+    LENGTH:  0004H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?DRV_IR
+    LENGTH:  0004H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?TIMER
+    LENGTH:  0002H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?IR
+    LENGTH:  0002H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?__POSITION_CTRL_MOVE?POSITION_CTRL
+    LENGTH:  0001H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?_FFT_PILLARS_GET?FFT
+    LENGTH:  0001H
+*** ERROR L107: ADDRESS SPACE OVERFLOW
+    SPACE:   DATA    
+    SEGMENT: ?DT?MIC
+    LENGTH:  0001H
+*** ERROR L105: PUBLIC REFERS TO IGNORED SEGMENT
+    SYMBOL:  ?_ACTION_CTRL?BYTE
+    SEGMENT: ?DT?_ACTION_CTRL?ACTION
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  ?_COLOR_CTRL?BYTE
+    MODULE:  .\Objects\action.obj (ACTION)
+    ADDRESS: 17BCH
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  ?_COLOR_CTRL?BYTE
+    MODULE:  .\Objects\action.obj (ACTION)
+    ADDRESS: 17BEH
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  ?_COLOR_CTRL?BYTE
+    MODULE:  .\Objects\action.obj (ACTION)
+    ADDRESS: 17C0H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  ?_COLOR_CTRL?BYTE
+    MODULE:  .\Objects\action.obj (ACTION)
+    ADDRESS: 17C2H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  ?_COLOR_CTRL?BYTE
+    MODULE:  .\Objects\action.obj (ACTION)
+    ADDRESS: 17C5H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  ?_POSITION_CTRL?BYTE
+    MODULE:  .\Objects\action.obj (ACTION)
+    ADDRESS: 17D5H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  ?_POSITION_CTRL?BYTE
+    MODULE:  .\Objects\action.obj (ACTION)
+    ADDRESS: 17D7H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  ?_POSITION_CTRL?BYTE
+    MODULE:  .\Objects\action.obj (ACTION)
+    ADDRESS: 17D9H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\breath.obj (BREATH)
+    ADDRESS: 0FFFH
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\breath.obj (BREATH)
+    ADDRESS: 1001H
+*** ERROR L105: PUBLIC REFERS TO IGNORED SEGMENT
+    SYMBOL:  ?_COLOR_CTRL?BYTE
+    SEGMENT: ?DT?_COLOR_CTRL?COLOR_CTRL
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\color_ctrl.obj (COLOR_CTRL)
+    ADDRESS: 1205H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\color_ctrl.obj (COLOR_CTRL)
+    ADDRESS: 1207H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\player.obj (PLAYER)
+    ADDRESS: 0FA5H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\player.obj (PLAYER)
+    ADDRESS: 0FA7H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\player.obj (PLAYER)
+    ADDRESS: 0FD9H
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\player.obj (PLAYER)
+    ADDRESS: 0FDBH
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\player.obj (PLAYER)
+    ADDRESS: 0FDFH
+*** ERROR L105: PUBLIC REFERS TO IGNORED SEGMENT
+    SYMBOL:  ?_POSITION_CTRL?BYTE
+    SEGMENT: ?DT?_POSITION_CTRL?POSITION_CTRL
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\position_ctrl.obj (POSITION_CTRL)
+    ADDRESS: 0E1FH
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  TIMER_CNT
+    MODULE:  .\Objects\position_ctrl.obj (POSITION_CTRL)
+    ADDRESS: 0E21H
+*** ERROR L105: PUBLIC REFERS TO IGNORED SEGMENT
+    SYMBOL:  TIMER_CNT
+    SEGMENT: ?DT?TIMER
+*** ERROR L118: REFERENCE MADE TO ERRONEOUS EXTERNAL
+    SYMBOL:  MIC_VALID_MIN
+    MODULE:  .\Objects\fft.obj (FFT)
+    ADDRESS: 06A0H
+*** ERROR L105: PUBLIC REFERS TO IGNORED SEGMENT
+    SYMBOL:  MIC_VALID_MIN
+    SEGMENT: ?DT?MIC
+Program Size: data=184.1 xdata=679 code=6551
+Target not created.

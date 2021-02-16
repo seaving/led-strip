@@ -1,0 +1,65 @@
+C51 COMPILER V9.53.0.0   COLORS                                                            02/16/2021 14:57:44 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE COLORS
+OBJECT MODULE PLACED IN .\colors.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\FRAME\colors.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\CO
+                    -M;..\DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\colors.lst) TABS(2) OBJECT(.\colors.obj)
+
+line level    source
+
+   1          #include "colors.h"
+   2          
+   3          //七彩 红、橙、黄、绿、蓝、靛、紫 HSV
+   4          code uint8_t color_hsv_array[COLOR_HSV_ARRAY_ROWS][COLOR_HSV_ARRAY_COL] = {
+   5              // h,   s,      v
+   6              {0,     100,    100},
+   7              {11,    100,    100},
+   8              {17,    100,    100},
+   9              {33,    100,    100},
+  10              {67,    100,    100},
+  11              {50,    100,    100},
+  12              {76,    100,    100},
+  13              {0,     0,      100}    //白色
+  14          };
+  15          
+  16          code uint8_t color_hsv_array1[COLOR_HSV_ARRAY1_ROWS][COLOR_HSV_ARRAY_COL] = {
+  17              // h,   s,      v
+  18              {0,      100,    100},
+  19              {33,     100,    100},
+  20              {67,     100,    100},
+  21          
+  22              {4,      69,    100},
+  23              {44,     100,    98},
+  24              {50,    100,    100},
+  25          
+  26          
+  27              {9,      100,    100},
+  28              {33,     76,     80},
+  29              {83,    100,     55},
+  30          
+  31              {11,      100,    100},
+  32              {33,     76,     55},
+  33              {84,     49,    55},
+  34          
+  35          
+  36              {17,    100,    100},
+  37              {22,     75,     56},
+  38              {76,    100,    100},
+  39          
+  40              {0,     0,      100}
+  41          };
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =     72    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

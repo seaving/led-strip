@@ -1,0 +1,439 @@
+C51 COMPILER V9.53.0.0   IR                                                                02/16/2021 14:57:45 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE IR
+OBJECT MODULE PLACED IN .\ir.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\ir.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM;..\DRV;.
+                    -.\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\ir.lst) TABS(2) OBJECT(.\ir.obj)
+
+line level    source
+
+   1          #include "ir.h"
+   2          #include "cache.h"
+   3          #include "init.h"
+   4          
+   5          #include "line.h"
+   6          #include "fountain.h"
+   7          #include "interval.h"
+   8          #include "random.h"
+   9          #include "tetris.h"
+  10          
+  11          #include "line_music.h"
+  12          #include "fountain_music.h"
+  13          #include "stretch_music.h"
+  14          #include "interval_music.h"
+  15          #include "random_music.h"
+  16          
+  17          #include "drv_uart.h"
+  18          
+  19          typedef struct __work_mode__
+  20          {
+  21              uint8_t     is_music_mode:1;    //是否为音乐模式
+  22              uint8_t     is_power_on:1;      //是否开机
+  23              uint8_t     flush_index:6;      //动画索引
+  24              uint8_t     bright_adjust:4;    //亮度调节
+  25              uint8_t     fade_type:4;        //渐变模式
+  26              uint8_t     color_index:4;      //颜色索引
+  27              uint8_t     breath_interval:4;  //呼吸间隔
+  28              uint8_t     fade_interval:4;    //渐变间隔
+  29              uint8_t     smooth_interval:4;  //平滑间隔
+  30              uint8_t     is_static_color:1;    //是否静态颜色
+  31              uint8_t     position_index:4;   //位置控制方式
+  32          } work_mode_t;
+  33          
+  34          typedef void (*flush_action_cb)(flush_param_t *param);
+  35          
+  36          typedef struct __flush__
+  37          {
+  38              flush_action_cb         cb;
+  39              uint8_t                 action_mode;
+  40              uint8_t                 color_index;
+  41              uint8_t                 position_interval;
+  42              uint8_t                 bright_interval_len:4;
+  43              uint8_t                 dark_interval_len:4;
+  44              uint8_t                 position_len;
+  45              uint8_t                 position_type[5];
+  46          } flush_t;
+  47          
+  48          #define FLUSH_MODE_SIZE         43
+  49          static code flush_t _flush_action[FLUSH_MODE_SIZE] = {
+  50          
+  51              /*************************************** 非音乐模式 **************************************/
+  52              /**
+  53               * 线条模式
+  54              */
+C51 COMPILER V9.53.0.0   IR                                                                02/16/2021 14:57:45 PAGE 2   
+
+  55              {line_set, E_LINE_MODE_SINGLE, 5, 0, 0, 0, 1, {E_LINE_POSITION_KEEP}},
+  56              {line_set, E_LINE_MODE_RANDOM, 0, 0, 0, 0, 1, {E_LINE_POSITION_KEEP}},
+  57              /**
+  58               * 俄罗斯方块模式
+  59              */
+  60              {tetris_set, E_TETRIS_MODE_SINGLE, 6, 4, 0, 0, 4, {E_TETRIS_POSITION_LEFT, E_TETRIS_POSITION_RIGHT, E_
+             -TETRIS_POSITION_OPEN, E_TETRIS_POSITION_CLOSE}},
+  61              {tetris_set, E_TETRIS_MODE_RANDOM, 0, 4, 0, 0, 4, {E_TETRIS_POSITION_LEFT, E_TETRIS_POSITION_RIGHT, E_
+             -TETRIS_POSITION_OPEN, E_TETRIS_POSITION_CLOSE}},
+  62          
+  63              {tetris_set, E_TETRIS_MODE_SINGLE, 5, 4, 0, 0, 4, {E_TETRIS_POSITION_LEFT1, E_TETRIS_POSITION_RIGHT1, 
+             -E_TETRIS_POSITION_OPEN1, E_TETRIS_POSITION_CLOSE1}},
+  64              {tetris_set, E_TETRIS_MODE_RANDOM, 0, 4, 0, 0, 4, {E_TETRIS_POSITION_LEFT1, E_TETRIS_POSITION_RIGHT1, 
+             -E_TETRIS_POSITION_OPEN1, E_TETRIS_POSITION_CLOSE1}},
+  65              /**
+  66               * 喷泉模式
+  67              */
+  68              {fountain_set, E_FOUNTAIN_MODE_SINGLE, 5, 8, 2, 2, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION_R
+             -IGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  69              {fountain_set, E_FOUNTAIN_MODE_SINGLE, 5, 5, 8, 3, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION_R
+             -IGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  70              {fountain_set, E_FOUNTAIN_MODE_RANDOM, 0, 8, 2, 2, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION_R
+             -IGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  71              {fountain_set, E_FOUNTAIN_MODE_RANDOM, 0, 5, 8, 3, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION_R
+             -IGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  72              {fountain_set, E_FOUNTAIN_MODE_RANDOM, 0, 8, 0, 0, 4, {E_FOUNTAIN_POSITION_LEFT1, E_FOUNTAIN_POSITION_
+             -RIGHT1, E_FOUNTAIN_POSITION_OPEN1, E_FOUNTAIN_POSITION_CLOSE1}},
+  73              {fountain_set, E_FOUNTAIN_MODE_RANDOM, 0, 3, 0, 0, 4, {E_FOUNTAIN_POSITION_LEFT1, E_FOUNTAIN_POSITION_
+             -RIGHT1, E_FOUNTAIN_POSITION_OPEN1, E_FOUNTAIN_POSITION_CLOSE1}},
+  74              /**
+  75               * 追逐模式
+  76              */
+  77              {fountain_set, E_FOUNTAIN_MODE_SINGLE, 2, 4, 1, 5, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION_R
+             -IGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  78              {fountain_set, E_FOUNTAIN_MODE_SINGLE, 2, 1, 14, 14, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION
+             -_RIGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  79              {fountain_set, E_FOUNTAIN_MODE_SINGLE, 2, 2, 14, 14, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION
+             -_RIGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  80              {fountain_set, E_FOUNTAIN_MODE_RANDOM, 0, 3, 1, 5, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION_R
+             -IGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  81              {fountain_set, E_FOUNTAIN_MODE_RANDOM, 0, 1, 14, 14, 4, {E_FOUNTAIN_POSITION_LEFT1, E_FOUNTAIN_POSITIO
+             -N_RIGHT1, E_FOUNTAIN_POSITION_OPEN1, E_FOUNTAIN_POSITION_CLOSE1}},
+  82              {fountain_set, E_FOUNTAIN_MODE_RANDOM, 0, 2, 14, 14, 4, {E_FOUNTAIN_POSITION_LEFT, E_FOUNTAIN_POSITION
+             -_RIGHT, E_FOUNTAIN_POSITION_OPEN, E_FOUNTAIN_POSITION_CLOSE}},
+  83              /**
+  84               * 间隔模式
+  85              */
+  86              {interval_set, E_INTERVAL_MODE_SINGLE, 3, 10, 2, 2, 2, {E_INTERVAL_POSITION_INTERVAL_B, E_INTERVAL_POS
+             -ITION_INTERVAL_D}},
+  87              {interval_set, E_INTERVAL_MODE_SINGLE, 3, 10, 8, 3, 2, {E_INTERVAL_POSITION_INTERVAL_B, E_INTERVAL_POS
+             -ITION_INTERVAL_D}},
+  88              {interval_set, E_INTERVAL_MODE_RANDOM, 0, 10, 2, 2, 2, {E_INTERVAL_POSITION_INTERVAL_B, E_INTERVAL_POS
+             -ITION_INTERVAL_D}},
+  89              {interval_set, E_INTERVAL_MODE_RANDOM, 0, 10, 8, 3, 2, {E_INTERVAL_POSITION_INTERVAL_B, E_INTERVAL_POS
+             -ITION_INTERVAL_D}},
+  90              /**
+  91               * 随机星星模式
+  92              */
+  93              {random_set, E_RANDOM_MODE_SINGLE, 8, 33, 0, 0, 2, {E_RANDOM_POSITION_RANDOM, E_RANDOM_POSITION_RANDOM
+             -1}},
+  94              {random_set, E_RANDOM_MODE_RANDOM, 0, 33, 0, 0, 2, {E_RANDOM_POSITION_RANDOM, E_RANDOM_POSITION_RANDOM
+             -1}},
+C51 COMPILER V9.53.0.0   IR                                                                02/16/2021 14:57:45 PAGE 3   
+
+  95          
+  96              /*************************************** 音乐模式 **************************************/
+  97              /**
+  98               * 线条模式
+  99              */
+ 100              {line_music_set, E_LINE_MUSIC_MODE_SINGLE, 11, 0, 0, 0, 1, {E_LINE_MUSIC_POSITION_KEEP}},
+ 101              {line_music_set, E_LINE_MUSIC_MODE_RANDOM, 0, 0, 0, 0, 1, {E_LINE_MUSIC_POSITION_KEEP}},
+ 102              /**
+ 103               * 间隔模式
+ 104              */
+ 105              {interval_music_set, E_INTERVAL_MODE_SINGLE, 3, 1, 2, 2, 2, {E_INTERVAL_MUSIC_POSITION_INTERVAL_B, E_I
+             -NTERVAL_MUSIC_POSITION_INTERVAL_D}},
+ 106              {interval_music_set, E_INTERVAL_MODE_SINGLE, 3, 1, 8, 3, 2, {E_INTERVAL_MUSIC_POSITION_INTERVAL_B, E_I
+             -NTERVAL_MUSIC_POSITION_INTERVAL_D}},
+ 107              {interval_music_set, E_INTERVAL_MODE_RANDOM, 0, 1, 2, 2, 2, {E_INTERVAL_MUSIC_POSITION_INTERVAL_B, E_I
+             -NTERVAL_MUSIC_POSITION_INTERVAL_D}},
+ 108              {interval_music_set, E_INTERVAL_MODE_RANDOM, 0, 1, 8, 3, 2, {E_INTERVAL_MUSIC_POSITION_INTERVAL_B, E_I
+             -NTERVAL_MUSIC_POSITION_INTERVAL_D}},
+ 109              /**
+ 110               * 柱形模式
+ 111              */
+ 112              {stretch_music_set, E_STRETCH_MUSIC_MODE_SINGLE, 5, 1, 0, 0, 4, {E_STRETCH_MUSIC_POSITION_LEFT, E_STRE
+             -TCH_MUSIC_POSITION_RIGHT, E_STRETCH_MUSIC_POSITION_OPEN, E_STRETCH_MUSIC_POSITION_CLOSE}},
+ 113              {stretch_music_set, E_STRETCH_MUSIC_MODE_RANDOM, 0, 1, 0, 0, 4, {E_STRETCH_MUSIC_POSITION_LEFT, E_STRE
+             -TCH_MUSIC_POSITION_RIGHT, E_STRETCH_MUSIC_POSITION_OPEN, E_STRETCH_MUSIC_POSITION_CLOSE}},
+ 114              {stretch_music_set, E_STRETCH_MUSIC_MODE_SINGLE, 0, 1, 0, 0, 1, {E_STRETCH_MUSIC_POSITION_OPEN2}},
+ 115              /**
+ 116               * 带浮点柱形模式
+ 117              */
+ 118              {stretch_music_set, E_STRETCH_MUSIC_MODE_SINGLE, 5, 1, 0, 0, 4, {E_STRETCH_MUSIC_POSITION_LEFT1, E_STR
+             -ETCH_MUSIC_POSITION_RIGHT1, E_STRETCH_MUSIC_POSITION_OPEN1, E_STRETCH_MUSIC_POSITION_CLOSE1}},
+ 119              {stretch_music_set, E_STRETCH_MUSIC_MODE_RANDOM, 0, 1, 0, 0, 4, {E_STRETCH_MUSIC_POSITION_LEFT1, E_STR
+             -ETCH_MUSIC_POSITION_RIGHT1, E_STRETCH_MUSIC_POSITION_OPEN1, E_STRETCH_MUSIC_POSITION_CLOSE1}},
+ 120              
+ 121              /**
+ 122               * 浮点模式
+ 123              */
+ 124              {stretch_music_set, E_STRETCH_MUSIC_MODE_SINGLE, 5, 1, 0, 0, 1, {E_STRETCH_MUSIC_POSITION_LEFT2}},
+ 125              {stretch_music_set, E_STRETCH_MUSIC_MODE_RANDOM, 0, 1, 0, 0, 1, {E_STRETCH_MUSIC_POSITION_LEFT2}},
+ 126              /**
+ 127               * 喷泉模式
+ 128              */
+ 129              {fountain_music_set, E_FOUNTAIN_MUSIC_MODE_SINGLE, 2, 4, 0, 0, 4, {E_FOUNTAIN_MUSIC_POSITION_LEFT, E_F
+             -OUNTAIN_MUSIC_POSITION_RIGHT, E_FOUNTAIN_MUSIC_POSITION_OPEN, E_FOUNTAIN_MUSIC_POSITION_CLOSE}},
+ 130              {fountain_music_set, E_FOUNTAIN_MUSIC_MODE_RANDOM, 0, 4, 0, 0, 4, {E_FOUNTAIN_MUSIC_POSITION_LEFT, E_F
+             -OUNTAIN_MUSIC_POSITION_RIGHT, E_FOUNTAIN_MUSIC_POSITION_OPEN, E_FOUNTAIN_MUSIC_POSITION_CLOSE}},
+ 131              /**
+ 132               * 随机星星模式
+ 133              */
+ 134              {random_music_set, E_RANDOM_MUSIC_MODE_SINGLE, 8, 10, 0, 0, 2, {E_RANDOM_MUSIC_POSITION_RANDOM, E_RAND
+             -OM_MUSIC_POSITION_RANDOM1}},
+ 135              {random_music_set, E_RANDOM_MUSIC_MODE_RANDOM, 0, 10, 0, 0, 2, {E_RANDOM_MUSIC_POSITION_RANDOM, E_RAND
+             -OM_MUSIC_POSITION_RANDOM1}},
+ 136              {random_music_set, E_RANDOM_MUSIC_MODE_SINGLE, 2, 1, 0, 0, 1, {E_RANDOM_MUSIC_POSITION_RANDOM1}},
+ 137              {random_music_set, E_RANDOM_MUSIC_MODE_RANDOM, 0, 1, 0, 0, 1, {E_RANDOM_MUSIC_POSITION_RANDOM1}},
+ 138          };
+ 139          
+ 140          static code uint8_t _color_static[24] = {
+ 141               0,  0,  0,  0, 
+ 142               0,  1,  2, 15, 
+ 143               3,  4,  5,  0, 
+ 144               6,  7,  8,  0, 
+C51 COMPILER V9.53.0.0   IR                                                                02/16/2021 14:57:45 PAGE 4   
+
+ 145               9, 10, 11,  0, 
+ 146              12, 13, 14,  0, 
+ 147          };
+ 148          
+ 149          static xdata work_mode_t _work_mode = {0};
+ 150          
+ 151          static void _work_mode_init(void)
+ 152          {
+ 153   1          _work_mode.is_music_mode = false;
+ 154   1          _work_mode.is_power_on = false;
+ 155   1          _work_mode.flush_index = 0;
+ 156   1          _work_mode.fade_type = 0;
+ 157   1          _work_mode.color_index = 15;
+ 158   1          _work_mode.breath_interval = 0;
+ 159   1          _work_mode.fade_interval = 0;
+ 160   1          _work_mode.smooth_interval = 0;
+ 161   1          _work_mode.bright_adjust = 10;
+ 162   1          COLOR_CTRL_SET_BRIGHT_ADJUST(true, 100);
+ 163   1      }
+ 164          
+ 165          static void _flush(bit reset)
+ 166          {
+ 167   1          data flush_param_t param = {0};
+ 168   1          data uint8_t fade_interval;
+ 169   1      
+ 170   1          if (reset)
+ 171   1          {
+ 172   2              memset(actions, 0, sizeof(action_t) * ACTION_COUNT);
+ 173   2          }
+ 174   1      
+ 175   1          if (_work_mode.fade_type == E_FADE_TYPE_KEEP)
+ 176   1          {
+ 177   2              fade_interval = 0;
+ 178   2              _work_mode.breath_interval = 0;
+ 179   2              _work_mode.fade_interval = 0;
+ 180   2              _work_mode.smooth_interval = 0;
+ 181   2          }
+ 182   1          else if (_work_mode.fade_type == E_FADE_TYPE_BREATH)
+ 183   1          {
+ 184   2              fade_interval = _work_mode.breath_interval;
+ 185   2              _work_mode.fade_interval = 0;
+ 186   2              _work_mode.smooth_interval = 0;
+ 187   2          }
+ 188   1          else if (_work_mode.fade_type == E_FADE_TYPE_FADE)
+ 189   1          {
+ 190   2              fade_interval = _work_mode.fade_interval;
+ 191   2              _work_mode.breath_interval = 0;
+ 192   2              _work_mode.smooth_interval = 0;
+ 193   2          }
+ 194   1          else if (_work_mode.fade_type == E_FADE_TYPE_SMOOTH)
+ 195   1          {
+ 196   2              fade_interval = _work_mode.smooth_interval;
+ 197   2              _work_mode.breath_interval = 0;
+ 198   2              _work_mode.fade_interval = 0;
+ 199   2          }
+ 200   1      
+ 201   1          param.mode = _flush_action[_work_mode.flush_index].action_mode;
+ 202   1          param.position = _flush_action[_work_mode.flush_index].position_type[_work_mode.position_index];
+ 203   1          param.fade_type = _work_mode.fade_type;
+ 204   1          param.fade_interval = fade_interval;
+ 205   1          param.is_static_color = _work_mode.is_static_color;
+ 206   1          param.color_index = _work_mode.color_index;
+C51 COMPILER V9.53.0.0   IR                                                                02/16/2021 14:57:45 PAGE 5   
+
+ 207   1          param.is_raise_adjust = true;
+ 208   1          param.adjust = _work_mode.bright_adjust * 10;
+ 209   1      
+ 210   1          param.position_interval = _flush_action[_work_mode.flush_index].position_interval;
+ 211   1          param.bright_interval_len = _flush_action[_work_mode.flush_index].bright_interval_len;
+ 212   1          param.dark_interval_len = _flush_action[_work_mode.flush_index].dark_interval_len;
+ 213   1      
+ 214   1          _flush_action[_work_mode.flush_index].cb(&param);
+ 215   1      }
+ 216          
+ 217          void ir(void)
+ 218          {
+ 219   1          data uint8_t ir_code;
+ 220   1      
+ 221   1          hal_ir_data(ir_code);
+ 222   1      
+ 223   1      #if 0
+                  if (ir_code >= 0)
+                      drv_uart_send_byte(ir_code);
+              #endif
+ 227   1      
+ 228   1          switch (ir_code)
+ 229   1          {
+ 230   2              /**
+ 231   2               * 亮度调节
+ 232   2              */
+ 233   2              case E_IR_CODE_BRIGHT:
+ 234   2              {
+ 235   3                  _work_mode.bright_adjust += 1;
+ 236   3                  if (_work_mode.bright_adjust > 10)
+ 237   3                      _work_mode.bright_adjust = 10;
+ 238   3                  _flush(false);
+ 239   3                  break;
+ 240   3              }
+ 241   2              case E_IR_CODE_DARKEN:
+ 242   2              {
+ 243   3                  if (_work_mode.bright_adjust > 1)
+ 244   3                      _work_mode.bright_adjust -= 1;
+ 245   3                  else
+ 246   3                      _work_mode.bright_adjust = 1;
+ 247   3                  _flush(false);
+ 248   3                  break;
+ 249   3              }
+ 250   2              /**
+ 251   2               * 电源控制
+ 252   2              */
+ 253   2              case E_IR_CODE_POWER_OFF:
+ 254   2              {
+ 255   3                  player_clear();
+ 256   3                  _work_mode_init();
+ 257   3                  //hal_sys_pd();   //掉电模式
+ 258   3                  hal_delay(150);
+ 259   3                  break;
+ 260   3              }
+ 261   2              case E_IR_CODE_POWER_ON:
+ 262   2              {
+ 263   3                  if (_work_mode.is_power_on == false)
+ 264   3                  {
+ 265   4                      init();
+ 266   4                      _work_mode_init();
+ 267   4                      _work_mode.is_power_on = true;
+ 268   4                      _flush(true);
+C51 COMPILER V9.53.0.0   IR                                                                02/16/2021 14:57:45 PAGE 6   
+
+ 269   4                  }
+ 270   3                  else
+ 271   3                  {
+ 272   4                      if (_work_mode.is_music_mode) _work_mode.flush_index = 0;
+ 273   4                      else _work_mode.flush_index = 24;
+ 274   4                      _work_mode.is_music_mode = ~_work_mode.is_music_mode;
+ 275   4                      _flush(true);
+ 276   4                  }
+ 277   3                  break;
+ 278   3              }
+ 279   2              /**
+ 280   2               * 静态颜色
+ 281   2              */
+ 282   2              case E_IR_CODE_RED:
+ 283   2              case E_IR_CODE_RED1:
+ 284   2              case E_IR_CODE_RED2:
+ 285   2              case E_IR_CODE_RED3:
+ 286   2              case E_IR_CODE_RED4:
+ 287   2              case E_IR_CODE_GREEN:
+ 288   2              case E_IR_CODE_GREEN1:
+ 289   2              case E_IR_CODE_GREEN2:
+ 290   2              case E_IR_CODE_GREEN3:
+ 291   2              case E_IR_CODE_GREEN4:
+ 292   2              case E_IR_CODE_BLUE:
+ 293   2              case E_IR_CODE_BLUE1:
+ 294   2              case E_IR_CODE_BLUE2:
+ 295   2              case E_IR_CODE_BLUE3:
+ 296   2              case E_IR_CODE_BLUE4:
+ 297   2              case E_IR_CODE_WHITE:
+ 298   2              {
+ 299   3                  _work_mode.is_static_color = true;
+ 300   3                  _work_mode.color_index = _color_static[ir_code];
+ 301   3                  _flush(false);
+ 302   3                  break;
+ 303   3              }
+ 304   2              /**
+ 305   2               * 刷新特效
+ 306   2              */
+ 307   2              case E_IR_CODE_FLUSH:
+ 308   2              {
+ 309   3                  if (_work_mode.is_power_on == true)
+ 310   3                  {
+ 311   4                      _work_mode.fade_type = E_FADE_TYPE_KEEP;
+ 312   4                      if (_work_mode.is_static_color == false) _work_mode.position_index ++;
+ 313   4                      if (_work_mode.position_index >= _flush_action[_work_mode.flush_index].position_len)
+ 314   4                      {
+ 315   5                          _work_mode.position_index = 0;
+ 316   5                          _work_mode.flush_index ++;
+ 317   5                          if (_work_mode.flush_index >= FLUSH_MODE_SIZE)
+ 318   5                          {
+ 319   6                              _work_mode.flush_index = 0;
+ 320   6                          }
+ 321   5                      }
+ 322   4      
+ 323   4                      _work_mode.fade_type = 0;
+ 324   4                      _work_mode.color_index = _flush_action[_work_mode.flush_index].color_index;
+ 325   4                      _work_mode.is_static_color = false;
+ 326   4                      _flush(true);
+ 327   4                  }
+ 328   3                  break;
+ 329   3              }
+ 330   2              /**
+C51 COMPILER V9.53.0.0   IR                                                                02/16/2021 14:57:45 PAGE 7   
+
+ 331   2               * 呼吸速度
+ 332   2              */
+ 333   2              case E_IR_CODE_STROBE:
+ 334   2              {
+ 335   3                  _work_mode.fade_type = E_FADE_TYPE_BREATH;
+ 336   3                  _work_mode.breath_interval ++;
+ 337   3                  if (_work_mode.breath_interval > 3)
+ 338   3                      _work_mode.breath_interval = 0;
+ 339   3                  _flush(false);
+ 340   3                  break;
+ 341   3              }
+ 342   2              /**
+ 343   2               * 渐变速度
+ 344   2              */
+ 345   2              case E_IR_CODE_FADE:
+ 346   2              {
+ 347   3                  _work_mode.fade_type = E_FADE_TYPE_FADE;
+ 348   3                  _work_mode.fade_interval ++;
+ 349   3                  if (_work_mode.fade_interval > 3)
+ 350   3                      _work_mode.fade_interval = 0;
+ 351   3                  _flush(false);
+ 352   3                  break;
+ 353   3              }
+ 354   2              /**
+ 355   2               * 平滑速度
+ 356   2              */
+ 357   2              case E_IR_CODE_SMOOTH:
+ 358   2              {
+ 359   3                  _work_mode.fade_type = E_FADE_TYPE_SMOOTH;
+ 360   3                  _work_mode.smooth_interval ++;
+ 361   3                  if (_work_mode.smooth_interval > 3)
+ 362   3                      _work_mode.smooth_interval = 0;
+ 363   3                  _flush(false);
+ 364   3                  break;
+ 365   3              }
+ 366   2              default:
+ 367   2                  break;
+ 368   2          }
+ 369   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    956    ----
+   CONSTANT SIZE    =    591    ----
+   XDATA SIZE       =      5    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      10
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,93 @@
+C51 COMPILER V9.53.0.0   PLAYER                                                            02/16/2021 14:57:44 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE PLAYER
+OBJECT MODULE PLACED IN .\player.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\FRAME\player.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\CO
+                    -M;..\DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\player.lst) TABS(2) OBJECT(.\player.obj)
+
+line level    source
+
+   1          #include "player.h"
+   2          #include "timer.h"
+   3          #include "cache.h"
+   4          #include "color_ctrl.h"
+   5          #include "position_ctrl.h"
+   6          
+   7          static data player_t _players[PLAYER_COUNT] = {0};
+   8          static data uint8_t _player_index = 0;
+   9          
+  10          void play(void)
+  11          {
+  12   1          data uint8_t action_index = 0, i = 0, j = 0;
+  13   1      
+  14   1          //当前播放器播放
+  15   1          for (i = 0; i < PLAY_MAX_COUNT; i ++)
+  16   1          {
+  17   2              //if (_players[_player_index].enable == true)
+  18   2              {
+  19   3                  action_index = _players[_player_index].action_start + i;
+  20   3                  if (action_index <= _players[_player_index].action_end)
+  21   3                  {
+  22   4                      color_ctrl(&actions[action_index].hsv, &actions[action_index].color_ctrl, 
+  23   4                          actions[action_index].fre_index, POSITION_CTRL_LEN(&actions[action_index].position_ctr
+             -l));
+  24   4                      position_ctrl(&actions[action_index].hsv, &actions[action_index].position_ctrl, 
+  25   4                          &actions[action_index].color_ctrl, actions[action_index].fre_index);
+  26   4                  }
+  27   3              }
+  28   2      
+  29   2              cache_refresh(actions[action_index].position_ctrl.cache_index, j);
+  30   2          }
+  31   1      
+  32   1      #if 0
+                  //时间到了就切换到下一个播放器
+                  if (_players[_player_index].enable == true 
+                      && _players[_player_index].play_time > 0 
+                      && IS_TIME_TO(_players[_player_index].play_time))
+                  {
+                      //切换到下一播放器，先清空显示
+                      cache_clear(0);
+                      _player_index ++;
+                      if (_player_index >= PLAYER_COUNT)
+                      {
+                          _player_index = 0;
+                      }
+                  }
+              #endif
+  47   1      
+  48   1          timer_cnt ++;
+  49   1      }
+  50          
+  51          void player_set(uint8_t player_index, uint8_t action_start, uint8_t action_end, uint16_t play_time, bool e
+             -nable)
+  52          {
+C51 COMPILER V9.53.0.0   PLAYER                                                            02/16/2021 14:57:44 PAGE 2   
+
+  53   1          _players[player_index].action_start = action_start;
+  54   1          _players[player_index].action_end = action_end;
+  55   1          _players[player_index].play_time = play_time;
+  56   1          _players[player_index].enable = enable;
+  57   1      }
+  58          
+  59          void player_clear(void)
+  60          {
+  61   1          memset(_players, 0, sizeof(player_t) * PLAYER_COUNT);
+  62   1          memset(actions, 0, sizeof(action_t) * ACTION_COUNT);
+  63   1          cache_clear(0);
+  64   1          cache_clear(1);
+  65   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    406    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6       9
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

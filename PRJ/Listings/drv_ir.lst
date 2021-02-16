@@ -1,0 +1,135 @@
+C51 COMPILER V9.53.0.0   DRV_IR                                                            02/16/2021 14:57:48 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE DRV_IR
+OBJECT MODULE PLACED IN .\drv_ir.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\DRV\drv_ir.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM;..\D
+                    -RV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\drv_ir.lst) TABS(2) OBJECT(.\drv_ir.obj)
+
+line level    source
+
+   1          #include "drv_ir.h"
+   2          
+   3          #define IRC_110592    0
+   4          
+   5          static data bit _ir_start_flag = 0;     //位变量Start_Flag用于指示是否开始处理
+   6          static data uint8_t _ir_time_cnt = 0;   //下降沿之间的时间计数器
+   7          static data uint8_t _ir_bit_num = 0;    //变量IR_bit用于指示红外数据的位数
+   8          //static data uint32_t _ir_code;      //用户码+用户码+数据码+数据反码
+   9          static data uint16_t _ir_code;        //为了节省内存，这里使用的是数据码+数据反码
+  10          
+  11          xdata uint8_t ir_data = 0xFF;       //保持值，0xFF 无效
+  12          
+  13          void drv_ir_init(void)
+  14          {
+  15   1        //定时计数器0初始化函数
+  16   1        AUXR &= 0x7F;         //定时器时钟12T模式
+  17   1        TMOD &= 0xF0;         //T0工作在工作方式2，8位自动重装载模式
+  18   1        TMOD |= 0x02;         //T0工作在工作方式2，8位自动重装载模式
+  19   1        TL0 = 0x00;           //定时初值为0，则T0定时时间达到最大（11.0592MB约0.278ms， 35MB约0
+             -.088ms）
+  20   1        TH0 = 0x00;           //定时初值为0，则T0定时时间达到最大（约0.278ms）
+  21   1        TF0 = 0;          //清除TF0标志
+  22   1        ET0 = 1;        //使能T0的溢出中断
+  23   1        //TR0 = 1;        //开启T0运行控制位，允许T0开始计数
+  24   1                                //定时时间计算：t = 256 * 12 / 35(或11.0592) = 87.77us(或277.77us)
+  25   1      
+  26   1        //外部中断0初始化函数
+  27   1        IT0 = 1;        //配置外部中断0信号触发方式为边沿触发（下降沿有效）
+  28   1        EX0 = 1;        //使能INT0中断
+  29   1        EA = 1;         //使能单片机总中断开关EA
+  30   1      }
+  31          
+  32          void drv_ir_int_isr() interrupt 0
+  33          {
+  34   1        //IE0 = 0;        //清除外部中断标记
+  35   1      
+  36   1        if (_ir_start_flag)
+  37   1        {
+  38   2      #if IRC_110592
+                  if (32 < _ir_time_cnt && _ir_time_cnt < 70) //判断引导码（9ms+4.5ms）
+              #else
+  41   2          if (102 < _ir_time_cnt && _ir_time_cnt < 221) //判断引导码（9ms+4.5ms）
+  42   2      #endif
+  43   2          {
+  44   3            //_ir_bit_num大约要溢出32次(9ms/0.278ms)到70次(可以大于(9+4.5)/0.278)
+  45   3            _ir_bit_num = 0;            //清除位数变量，确保当前IR_bit为0，表示引导码
+  46   3            _ir_code = 0;
+  47   3            _ir_time_cnt = 0;
+  48   3      
+  49   3            ir_data = 0xFF;
+  50   3          }
+  51   2          else
+  52   2          {
+  53   3      #if IRC_110592
+C51 COMPILER V9.53.0.0   DRV_IR                                                            02/16/2021 14:57:48 PAGE 2   
+
+                    if (_ir_time_cnt > 7)       //若“时间间隔”比7大那肯定是“1码”反之为“0码”
+              #else
+  56   3            if (_ir_time_cnt > 22)        //若“时间间隔”比7大那肯定是“1码”反之为“0码”
+  57   3      #endif
+  58   3            {
+  59   4              _ir_code |= 0x8000;
+  60   4            }
+  61   3      
+  62   3            if (_ir_bit_num < 31)
+  63   3            {
+  64   4              _ir_code >>= 1;
+  65   4            }
+  66   3      
+  67   3            _ir_time_cnt = 0;             //清零时间宽度计数值
+  68   3      
+  69   3            _ir_bit_num ++;               //位数变量自增
+  70   3            if(_ir_bit_num == 32)           //如果达到了32位（32个数据位）
+  71   3            {
+  72   4              TR0 = 0;                  //关闭T0运行控制位，停止T0计数
+  73   4              _ir_start_flag = 0;           //结束，重新下一轮
+  74   4      
+  75   4              _ir_bit_num = 0;            //位数变量清零
+  76   4              if ((((_ir_code >> 8) & 0xFF) | (_ir_code & 0xFF)) == 0xFF)
+  77   4              {
+  78   5                ir_data = _ir_code & 0xFF;
+  79   5              }
+  80   4            }
+  81   3          }
+  82   2        }
+  83   1        else                      //外部中断0检测到下降沿，即将开始引导码
+  84   1        {
+  85   2          TR0 = 1;                  //开启T0运行控制位，允许T0开始计数
+  86   2      
+  87   2          _ir_start_flag = 1;             //红外数据产生第一次下降沿，意味着数据即将开始
+  88   2      
+  89   2          _ir_bit_num = 0;
+  90   2          _ir_code = 0;
+  91   2          _ir_time_cnt = 0;
+  92   2      
+  93   2          ir_data = 0xFF;
+  94   2        }
+  95   1      }
+  96          
+  97          void drv_ir_timer_isr() interrupt 1
+  98          {
+  99   1          /*每过0.278ms则T0溢出一次，就是想要用溢出次数去衡量两个下降沿之间
+ 100   1          的时间长短：前导码9ms+4.5ms，则IR_time大约要溢出32次(9ms/0.278ms)
+ 101   1          到70次(可以大于(9+4.5)/0.278)。如果是“0码”，则周期是1.125ms，则
+ 102   1          IR_time大约要溢出4次(1.125ms/0.278ms)，如果是“1码”，周期是2.25ms，
+ 103   1          则IR_time大约要溢出8次(2.25ms/0.278ms)。这样就可以区分不同的红外位
+ 104   1          含义了.*/
+ 105   1        _ir_time_cnt ++;
+ 106   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    155    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4    ----
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.53.0.0   DRV_IR                                                            02/16/2021 14:57:48 PAGE 3   
+
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

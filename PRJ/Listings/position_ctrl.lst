@@ -1,0 +1,570 @@
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE POSITION_CTRL
+OBJECT MODULE PLACED IN .\position_ctrl.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\FRAME\position_ctrl.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAM
+                    -E;..\COM;..\DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\position_ctrl.lst) TABS(2) OBJECT(.\position_ctrl.obj
+                    -)
+
+line level    source
+
+   1          #include "position_ctrl.h"
+   2          #include "timer.h"
+   3          #include "cache.h"
+   4          #include "fft.h"
+   5          #include "color_ctrl.h"
+   6          
+   7          #define POSITION_RANDOM_SIZE        8
+   8          static code uint8_t _position_random[POSITION_RANDOM_SIZE][LED_MAX_NUM] = {
+   9              {
+  10                  26, 14, 43, 9, 14, 16, 31, 40, 4, 41, 48, 37, 7, 46, 16, 10, 39, 11, 20, 29, 15, 20, 30, 
+  11                  21, 43, 18, 33, 13, 34, 4, 35, 41, 14, 17, 28, 18, 28, 8, 44, 6, 38, 40, 32, 21, 0, 10, 33, 45, 29
+             -, 29
+  12              }, {
+  13                  36, 35, 38, 21, 34, 33, 21, 43, 18, 21, 38, 7, 6, 25, 46, 32, 7, 2, 17, 9, 47, 37, 46, 48, 
+  14                  1, 18, 21, 7, 0, 2, 24, 43, 18, 37, 34, 25, 45, 12, 36, 8, 9, 42, 9, 9, 26, 31, 38, 41, 7, 2
+  15              }, {
+  16                  24, 43, 7, 14, 18, 25, 25, 1, 32, 1, 30, 11, 38, 15, 22, 13, 36, 39, 47, 24, 31, 24, 14, 8, 23, 
+  17                  17, 4, 29, 42, 28, 14, 27, 12, 20, 21, 24, 35, 45, 41, 24, 2, 34, 48, 5, 38, 47, 5, 8, 30, 15
+  18              }, {
+  19                  27, 31, 33, 30, 18, 47, 14, 14, 15, 21, 45, 49, 43, 42, 44, 39, 43, 7, 36, 36, 27, 10, 21, 21, 28,
+             - 49, 
+  20                  30, 35, 2, 28, 46, 10, 17, 0, 22, 28, 12, 33, 5, 0, 41, 29, 11, 27, 5, 22, 16, 26, 41, 37
+  21              }, {
+  22                  48, 15, 6, 31, 3, 28, 2, 18, 14, 16, 18, 3, 44, 34, 10, 22, 29, 42, 30, 19, 23, 28, 49, 12, 
+  23                  25, 28, 42, 35, 19, 26, 3, 32, 8, 2, 24, 14, 17, 30, 16, 25, 45, 37, 20, 45, 26, 26, 19, 28, 12, 6
+  24              }, {
+  25                  9, 32, 2, 14, 4, 33, 5, 29, 24, 39, 32, 15, 16, 10, 28, 15, 6, 25, 19, 27, 29, 0, 27, 7, 27, 
+  26                  4, 8, 0, 42, 20, 27, 4, 35, 31, 14, 42, 19, 30, 47, 49, 36, 30, 22, 16, 46, 4, 1, 47, 36, 31
+  27              }, {
+  28                  40, 4, 16, 18, 7, 47, 19, 13, 38, 2, 8, 25, 5, 9, 6, 12, 0, 48, 5, 43, 41, 34, 16, 22, 13, 
+  29                  7, 20, 13, 25, 31, 25, 33, 34, 40, 33, 46, 23, 46, 12, 44, 5, 40, 44, 48, 35, 22, 16, 10, 22, 17
+  30              }, {
+  31                  36, 16, 1, 9, 39, 34, 36, 13, 0, 40, 19, 48, 21, 7, 47, 7, 9, 0, 41, 30, 11, 48, 48, 49, 46, 
+  32                  39, 39, 32, 5, 0, 38, 10, 47, 38, 7, 39, 31, 20, 47, 23, 12, 38, 7, 19, 44, 6, 8, 14, 38, 9
+  33              },
+  34          };
+  35          
+  36          static void __position_ctrl_move(position_ctrl_t *position_ctrl, uint8_t len, bool is_left, uint8_t r, uin
+             -t8_t g, uint8_t b)
+  37          {
+  38   1          data bit flag = false;
+  39   1          data uint8_t offset, offset1, i;
+  40   1      
+  41   1          if (IS_TIME_TO(position_ctrl->interval) == false)
+  42   1          {
+  43   2              return;
+  44   2          }
+  45   1      
+  46   1          len -= 1;
+  47   1      
+  48   1          if (position_ctrl->v.interval.dark_interval_offset == 0)
+  49   1          {
+  50   2              if (position_ctrl->v.interval.bright_interval_offset == 15)
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 2   
+
+  51   2                  position_ctrl->v.interval.bright_interval_offset = 0;
+  52   2              position_ctrl->v.interval.bright_interval_offset ++;
+  53   2              if (position_ctrl->v.interval.bright_interval_offset >= position_ctrl->v.interval.bright_interval_
+             -len)
+  54   2              {
+  55   3                  position_ctrl->v.interval.dark_interval_offset = 15;
+  56   3                  position_ctrl->v.interval.bright_interval_offset = 0;
+  57   3                  flag = true;
+  58   3              }
+  59   2          }
+  60   1          if (flag == false && position_ctrl->v.interval.bright_interval_offset == 0) 
+  61   1          {
+  62   2              if (position_ctrl->v.interval.dark_interval_offset == 15)
+  63   2                  position_ctrl->v.interval.dark_interval_offset = 0;
+  64   2              position_ctrl->v.interval.dark_interval_offset ++;
+  65   2              if (position_ctrl->v.interval.dark_interval_offset >= position_ctrl->v.interval.dark_interval_len)
+  66   2              {
+  67   3                  position_ctrl->v.interval.dark_interval_offset = 0;
+  68   3                  position_ctrl->v.interval.bright_interval_offset = 15;
+  69   3              }
+  70   2      
+  71   2              if (position_ctrl->v.interval.dark_interval_len > 0)
+  72   2              {
+  73   3                  r = g = b = 0;
+  74   3              }
+  75   2          }
+  76   1      
+  77   1          if (is_left == false)
+  78   1          {
+  79   2              offset = position_ctrl->start;
+  80   2          }
+  81   1          else
+  82   1          {
+  83   2              offset = position_ctrl->end;
+  84   2          }
+  85   1      
+  86   1          cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+  87   1      
+  88   1          for (i = 0; i < len; i ++)
+  89   1          {
+  90   2              if (is_left == false)
+  91   2              {
+  92   3                  offset = position_ctrl->end - i;
+  93   3                  offset1 = offset - 1;
+  94   3              }
+  95   2              else
+  96   2              {
+  97   3                  offset = position_ctrl->start + i;
+  98   3                  offset1 = offset + 1;
+  99   3              }
+ 100   2      
+ 101   2              r = cache_get_pixel_r(position_ctrl->cache_index, offset1);
+ 102   2              g = cache_get_pixel_g(position_ctrl->cache_index, offset1);
+ 103   2              b = cache_get_pixel_b(position_ctrl->cache_index, offset1);
+ 104   2              cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+ 105   2          }
+ 106   1      }
+ 107          
+ 108          static void _position_ctrl_stretch(position_ctrl_t *position_ctrl, uint8_t len, uint8_t r, uint8_t g, uint
+             -8_t b)
+ 109          {
+ 110   1          data uint8_t offset;
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 3   
+
+ 111   1      
+ 112   1          if (IS_TIME_TO(position_ctrl->interval) == false)
+ 113   1          {
+ 114   2              return;
+ 115   2          }
+ 116   1      
+ 117   1          if (position_ctrl->position_type == E_POSITION_TYPE_STRETCH_LEFT)
+ 118   1          {
+ 119   2              if (position_ctrl->v.stretch.dir == true)
+ 120   2              {
+ 121   3                  //缩回去
+ 122   3                  r = g = b = 0;
+ 123   3                  offset = position_ctrl->start + position_ctrl->v.stretch.offset;
+ 124   3              }
+ 125   2              else
+ 126   2              {
+ 127   3                  //伸出去
+ 128   3                  offset = position_ctrl->end - position_ctrl->v.stretch.offset;
+ 129   3              }
+ 130   2          }
+ 131   1          else
+ 132   1          {
+ 133   2              if (position_ctrl->v.stretch.dir == true)
+ 134   2              {
+ 135   3                  //缩回去
+ 136   3                  r = g = b = 0;
+ 137   3                  offset = position_ctrl->end - position_ctrl->v.stretch.offset;
+ 138   3              }
+ 139   2              else
+ 140   2              {
+ 141   3                  //伸出去
+ 142   3                  offset = position_ctrl->start + position_ctrl->v.stretch.offset;
+ 143   3              }
+ 144   2          }
+ 145   1      
+ 146   1          position_ctrl->v.stretch.offset ++;
+ 147   1          if (position_ctrl->v.stretch.offset >= len)
+ 148   1          {
+ 149   2              position_ctrl->v.stretch.offset = 0;
+ 150   2              position_ctrl->v.stretch.dir = position_ctrl->v.stretch.dir ? false : true;
+ 151   2          }
+ 152   1      
+ 153   1          cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+ 154   1      }
+ 155          
+ 156          static void _position_ctrl_interval(position_ctrl_t *position_ctrl, uint8_t len, uint8_t r, uint8_t g, uin
+             -t8_t b)
+ 157          {
+ 158   1          data uint8_t i;
+ 159   1          data bit flag = false;
+ 160   1          data bool dark_first= position_ctrl->position_type == E_POSITION_TYPE_INTERVAL_D;
+ 161   1          data uint8_t r1 = r, g1 = g, b1 = b;
+ 162   1      
+ 163   1          if (IS_TIME_TO(position_ctrl->interval) == false)
+ 164   1          {
+ 165   2              return;
+ 166   2          }
+ 167   1      
+ 168   1          cache_set(position_ctrl->cache_index, position_ctrl->start, len, 0, 0, 0);
+ 169   1      
+ 170   1          for (i = 0; i < len; i ++)
+ 171   1          {
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 4   
+
+ 172   2              if (flag == dark_first)
+ 173   2              {
+ 174   3                  position_ctrl->v.interval.bright_interval_offset ++;
+ 175   3                  if (position_ctrl->v.interval.bright_interval_offset >= position_ctrl->v.interval.bright_inter
+             -val_len)
+ 176   3                  {
+ 177   4                      position_ctrl->v.interval.dark_interval_offset = 0;
+ 178   4                      position_ctrl->v.interval.bright_interval_offset = 0;
+ 179   4                      flag = ~flag;
+ 180   4                  }
+ 181   3      
+ 182   3                  if (position_ctrl->v.interval.bright_interval_len > 0)
+ 183   3                  {
+ 184   4                      r = r1;
+ 185   4                      g = g1;
+ 186   4                      b = b1;
+ 187   4                  }
+ 188   3              }
+ 189   2              else
+ 190   2              {
+ 191   3                  position_ctrl->v.interval.dark_interval_offset ++;
+ 192   3                  if (position_ctrl->v.interval.dark_interval_offset >= position_ctrl->v.interval.dark_interval_
+             -len)
+ 193   3                  {
+ 194   4                      position_ctrl->v.interval.dark_interval_offset = 0;
+ 195   4                      position_ctrl->v.interval.bright_interval_offset = 0;
+ 196   4                      flag = ~flag;
+ 197   4                  }
+ 198   3      
+ 199   3                  if (position_ctrl->v.interval.dark_interval_len > 0)
+ 200   3                  {
+ 201   4                      r = g = b = 0;
+ 202   4                  }
+ 203   3              }
+ 204   2      
+ 205   2              cache_set_pixel(position_ctrl->cache_index, position_ctrl->start + i, r, g, b);
+ 206   2          }
+ 207   1      }
+ 208          
+ 209          static void _position_ctrl_random(position_ctrl_t *position_ctrl, uint8_t len, uint8_t r, uint8_t g, uint8
+             -_t b)
+ 210          {
+ 211   1          data uint8_t offset = position_ctrl->v.random_offset;
+ 212   1      
+ 213   1          if (IS_TIME_TO(position_ctrl->interval))
+ 214   1          {
+ 215   2              cache_set(position_ctrl->cache_index, position_ctrl->start, len, 0, 0, 0);
+ 216   2      
+ 217   2              offset = _position_random[CUR_TIME_CNT() % POSITION_RANDOM_SIZE][CUR_TIME_CNT() % LED_MAX_NUM] % l
+             -en;
+ 218   2          }
+ 219   1      
+ 220   1          cache_set_pixel(position_ctrl->cache_index, position_ctrl->start + position_ctrl->v.random_offset, r, 
+             -g, b);
+ 221   1          cache_set_pixel(position_ctrl->cache_index, position_ctrl->start + offset, r, g, b);
+ 222   1      
+ 223   1          position_ctrl->v.random_offset = offset;
+ 224   1      }
+ 225          
+ 226          static void _position_ctrl_tetris(position_ctrl_t *position_ctrl, color_ctrl_t *color_ctrl, uint8_t len, u
+             -int8_t r, uint8_t g, uint8_t b)
+ 227          {
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 5   
+
+ 228   1          data hsv_t hsv;
+ 229   1          data uint8_t offset, offset1;
+ 230   1      
+ 231   1          if (IS_TIME_TO(position_ctrl->interval) == false)
+ 232   1          {
+ 233   2              return;
+ 234   2          }
+ 235   1      
+ 236   1          if (position_ctrl->position_type == E_POSITION_TYPE_TETRIS_LEFT)
+ 237   1          {
+ 238   2              offset = position_ctrl->end - position_ctrl->v.tetris.tetris_offset;
+ 239   2              offset1 = position_ctrl->end;
+ 240   2              if (offset != position_ctrl->end)
+ 241   2              {
+ 242   3                  offset1 = offset + 1;
+ 243   3              }
+ 244   2          }
+ 245   1          else
+ 246   1          {
+ 247   2              offset = position_ctrl->start + position_ctrl->v.tetris.tetris_offset;
+ 248   2              offset1 = position_ctrl->start;
+ 249   2              if (offset != position_ctrl->start)
+ 250   2              {
+ 251   3                  offset1 = offset - 1;
+ 252   3              }
+ 253   2          }
+ 254   1      
+ 255   1          cache_set_pixel(position_ctrl->cache_index, offset1, 0, 0, 0);
+ 256   1          cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+ 257   1      
+ 258   1          position_ctrl->v.tetris.tetris_offset ++;
+ 259   1          if (position_ctrl->v.tetris.tetris_offset >= len - position_ctrl->v.tetris.tetris_len)
+ 260   1          {
+ 261   2              position_ctrl->v.tetris.tetris_offset = 0;
+ 262   2      
+ 263   2              position_ctrl->v.tetris.tetris_len ++;
+ 264   2              if (position_ctrl->v.tetris.tetris_len >= len)
+ 265   2              {
+ 266   3                  position_ctrl->v.tetris.tetris_len = 0;
+ 267   3              }
+ 268   2      
+ 269   2              color_ctrl_get_adorn_hsv(&hsv, color_ctrl);
+ 270   2              hsv_to_rgb(&hsv, &r, &g, &b);
+ 271   2              cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+ 272   2          }
+ 273   1      }
+ 274          
+ 275          static void __position_ctrl(uint8_t r, uint8_t g, uint8_t b, uint8_t len, position_ctrl_t *position_ctrl, 
+             -color_ctrl_t *color_ctrl)
+ 276          {
+ 277   1          switch (position_ctrl->position_type)
+ 278   1          {
+ 279   2              case E_POSITION_TYPE_MOVE_LEFT:
+ 280   2              case E_POSITION_TYPE_MOVE_RIGHT:
+ 281   2                  __position_ctrl_move(position_ctrl, len, position_ctrl->position_type != E_POSITION_TYPE_MOVE_
+             -RIGHT, r, g, b);
+ 282   2                  break;
+ 283   2              case E_POSITION_TYPE_STRETCH_LEFT:
+ 284   2              case E_POSITION_TYPE_STRETCH_RIGHT:
+ 285   2                  _position_ctrl_stretch(position_ctrl, len, r, g, b);
+ 286   2                  break;
+ 287   2              case E_POSITION_TYPE_INTERVAL_B:
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 6   
+
+ 288   2              case E_POSITION_TYPE_INTERVAL_D:
+ 289   2                  _position_ctrl_interval(position_ctrl, len, r, g, b);
+ 290   2                  break;
+ 291   2              case E_POSITION_TYPE_RANDOM:
+ 292   2                  _position_ctrl_random(position_ctrl, len, r, g, b);
+ 293   2                  break;
+ 294   2              case E_POSITION_TYPE_TETRIS_LEFT:
+ 295   2              case E_POSITION_TYPE_TETRIS_RIGHT:
+ 296   2                  _position_ctrl_tetris(position_ctrl, color_ctrl, len, r, g, b);
+ 297   2                  break;
+ 298   2              case E_POSITION_TYPE_KEEP:
+ 299   2              default:
+ 300   2                  cache_set(position_ctrl->cache_index, position_ctrl->start, len, r, g, b);
+ 301   2                  break;
+ 302   2          }
+ 303   1      }
+ 304          
+ 305          /************************************************ 音乐模式 *******************************************
+             -*******/
+ 306          
+ 307          static void _position_ctrl_music_stretch(position_ctrl_t *position_ctrl, uint8_t len, color_ctrl_t *color_
+             -ctrl, bool is_float, uint8_t r, uint8_t g, uint8_t b, uint8_t pillars, bit only_float)
+ 308          {
+ 309   1          data hsv_t hsv;
+ 310   1          data uint8_t offset, offset1, offset2, i;
+ 311   1          data bit is_right = position_ctrl->position_type == E_POSITION_TYPE_MUSIC_STRETCH_RIGHT 
+ 312   1              || position_ctrl->position_type == E_POSITION_TYPE_MUSIC_STRETCH_FLOAT_RIGHT 
+ 313   1              || position_ctrl->position_type == E_POSITION_TYPE_MUSIC_FLOAT_RIGHT;
+ 314   1      
+ 315   1          if (only_float)
+ 316   1          {
+ 317   2              cache_set(position_ctrl->cache_index, position_ctrl->start, len, 0, 0, 0);
+ 318   2          }
+ 319   1      
+ 320   1          //这个延时需要与浮点成公倍数
+ 321   1          if (IS_TIME_TO(position_ctrl->interval))
+ 322   1          {
+ 323   2              if (position_ctrl->v.music_stretch.music_stretch_offset < pillars)
+ 324   2              {
+ 325   3                  position_ctrl->v.music_stretch.music_stretch_offset ++;
+ 326   3              }
+ 327   2              else if (position_ctrl->v.music_stretch.music_stretch_offset > pillars)
+ 328   2              {
+ 329   3                  position_ctrl->v.music_stretch.music_stretch_offset --;
+ 330   3              }
+ 331   2          }
+ 332   1      
+ 333   1          if (is_right)
+ 334   1          {
+ 335   2              offset = position_ctrl->start;
+ 336   2              offset2 = position_ctrl->start;
+ 337   2              if (position_ctrl->v.music_stretch.music_stretch_offset > 0)
+ 338   2                  offset2 = offset2 + position_ctrl->v.music_stretch.music_stretch_offset - 1;
+ 339   2              if (position_ctrl->v.music_stretch.music_stretch_offset != len)
+ 340   2              {
+ 341   3                  cache_set(position_ctrl->cache_index, offset2 + 1, len - position_ctrl->v.music_stretch.music_
+             -stretch_offset, 0, 0, 0);
+ 342   3              }
+ 343   2          }
+ 344   1          else
+ 345   1          {
+ 346   2              offset = position_ctrl->end;
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 7   
+
+ 347   2              offset2 = position_ctrl->end;
+ 348   2              if (position_ctrl->v.music_stretch.music_stretch_offset > 0)
+ 349   2                  offset2 = offset2 - (position_ctrl->v.music_stretch.music_stretch_offset - 1);
+ 350   2              cache_set(position_ctrl->cache_index, position_ctrl->start, len - position_ctrl->v.music_stretch.m
+             -usic_stretch_offset, 0, 0, 0);
+ 351   2          }
+ 352   1      
+ 353   1          if (only_float == false)
+ 354   1          {
+ 355   2              if (position_ctrl->v.music_stretch.music_stretch_offset == 0) r = g = b = 0;
+ 356   2              cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+ 357   2          }
+ 358   1      
+ 359   1          len = 0;
+ 360   1          if (position_ctrl->v.music_stretch.music_stretch_offset > 0)
+ 361   1              len = position_ctrl->v.music_stretch.music_stretch_offset - 1;
+ 362   1      
+ 363   1          for (i = 0; i < len && only_float == false; i ++)
+ 364   1          {
+ 365   2              if (is_right)
+ 366   2              {
+ 367   3                  offset = offset2 - i;
+ 368   3                  offset1 = offset - 1;
+ 369   3              }
+ 370   2              else
+ 371   2              {
+ 372   3                  offset = offset2 + i;
+ 373   3                  offset1 = offset + 1;
+ 374   3              }
+ 375   2              r = cache_get_pixel_r(position_ctrl->cache_index, offset1);
+ 376   2              g = cache_get_pixel_g(position_ctrl->cache_index, offset1);
+ 377   2              b = cache_get_pixel_b(position_ctrl->cache_index, offset1);
+ 378   2              cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+ 379   2          }
+ 380   1      
+ 381   1          if (is_float)
+ 382   1          {
+ 383   2              if (only_float == false)
+ 384   2              {
+ 385   3                  color_ctrl_get_adorn_hsv(&hsv, color_ctrl);
+ 386   3                  hsv_to_rgb(&hsv, &r, &g, &b);
+ 387   3              }
+ 388   2      
+ 389   2              if (position_ctrl->v.music_stretch.music_stretch_offset >= position_ctrl->v.music_stretch.music_fl
+             -oat_offset)
+ 390   2              {
+ 391   3                  if (is_right)
+ 392   3                  {
+ 393   4                      offset = position_ctrl->start;
+ 394   4                      if (position_ctrl->v.music_stretch.music_stretch_offset > 0)
+ 395   4                          offset = offset + position_ctrl->v.music_stretch.music_stretch_offset - 1;
+ 396   4                  }
+ 397   3                  else
+ 398   3                  {
+ 399   4                      offset = position_ctrl->end;
+ 400   4                      if (position_ctrl->v.music_stretch.music_stretch_offset > 0)
+ 401   4                          offset = offset - (position_ctrl->v.music_stretch.music_stretch_offset - 1);
+ 402   4                  }
+ 403   3                  position_ctrl->v.music_stretch.music_float_offset = position_ctrl->v.music_stretch.music_stret
+             -ch_offset;
+ 404   3                  cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+ 405   3              }
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 8   
+
+ 406   2      
+ 407   2              if (position_ctrl->v.music_stretch.music_float_offset == 0)
+ 408   2                  position_ctrl->v.music_stretch.music_float_offset = 1;
+ 409   2      
+ 410   2              if (is_right)
+ 411   2              {
+ 412   3                  offset = position_ctrl->start + position_ctrl->v.music_stretch.music_float_offset - 1;
+ 413   3                  offset1 = offset + 1;
+ 414   3              }
+ 415   2              else
+ 416   2              {
+ 417   3                  offset = position_ctrl->end - (position_ctrl->v.music_stretch.music_float_offset - 1);
+ 418   3                  offset1 = offset - 1;
+ 419   3              }
+ 420   2      
+ 421   2              if (IS_TIME_TO(position_ctrl->interval * 10))
+ 422   2              {
+ 423   3                  position_ctrl->v.music_stretch.music_float_offset --;
+ 424   3              }
+ 425   2      
+ 426   2              cache_set_pixel(position_ctrl->cache_index, offset1, 0, 0, 0);
+ 427   2              cache_set_pixel(position_ctrl->cache_index, offset, r, g, b);
+ 428   2          }
+ 429   1      }
+ 430          
+ 431          static void _position_ctrl_music_random(position_ctrl_t *position_ctrl, uint8_t len, uint8_t r, uint8_t g,
+             - uint8_t b, uint8_t amplitude)
+ 432          {
+ 433   1          data uint8_t offset = position_ctrl->v.random_offset;
+ 434   1      
+ 435   1          if (IS_TIME_TO(position_ctrl->interval))
+ 436   1          {
+ 437   2              offset = amplitude % len;
+ 438   2          }
+ 439   1      
+ 440   1          cache_set(position_ctrl->cache_index, position_ctrl->start, len, 0, 0, 0);
+ 441   1      
+ 442   1          cache_set_pixel(position_ctrl->cache_index, position_ctrl->start + position_ctrl->v.random_offset, r, 
+             -g, b);
+ 443   1          cache_set_pixel(position_ctrl->cache_index, position_ctrl->start + offset, r, g, b);
+ 444   1      
+ 445   1          position_ctrl->v.random_offset = offset;
+ 446   1      }
+ 447          
+ 448          static void __position_ctrl_music(uint8_t r, uint8_t g, uint8_t b, uint8_t len, position_ctrl_t *position_
+             -ctrl, color_ctrl_t *color_ctrl, uint8_t fre_index)
+ 449          {
+ 450   1          data uint8_t pillars, amplitude;
+ 451   1      
+ 452   1          fft_div(len);
+ 453   1          pillars = fft_pillars_get(fre_index);
+ 454   1          amplitude = fft_amplitude_get(fre_index);
+ 455   1      
+ 456   1          switch (position_ctrl->position_type)
+ 457   1          {
+ 458   2              case E_POSITION_TYPE_MUSIC_MOVE_LEFT:
+ 459   2              case E_POSITION_TYPE_MUSIC_MOVE_RIGHT:
+ 460   2                  if (amplitude <= 50) r = g = b = 0;
+ 461   2                  __position_ctrl_move(position_ctrl, len, position_ctrl->position_type != E_POSITION_TYPE_MUSIC
+             -_MOVE_RIGHT, r, g, b);
+ 462   2                  break;
+ 463   2              case E_POSITION_TYPE_MUSIC_STRETCH_LEFT:
+C51 COMPILER V9.53.0.0   POSITION_CTRL                                                     02/16/2021 14:57:45 PAGE 9   
+
+ 464   2              case E_POSITION_TYPE_MUSIC_STRETCH_RIGHT:
+ 465   2                  _position_ctrl_music_stretch(position_ctrl, len, color_ctrl, false, r, g, b, pillars, false);
+ 466   2                  break;
+ 467   2              case E_POSITION_TYPE_MUSIC_STRETCH_FLOAT_LEFT:
+ 468   2              case E_POSITION_TYPE_MUSIC_STRETCH_FLOAT_RIGHT:
+ 469   2                  _position_ctrl_music_stretch(position_ctrl, len, color_ctrl, true, r, g, b, pillars, false);
+ 470   2                  break;
+ 471   2              case E_POSITION_TYPE_MUSIC_FLOAT_LEFT:
+ 472   2              case E_POSITION_TYPE_MUSIC_FLOAT_RIGHT:
+ 473   2                  _position_ctrl_music_stretch(position_ctrl, len, color_ctrl, true, r, g, b, pillars, true);
+ 474   2                  break;
+ 475   2              case E_POSITION_TYPE_MUSIC_INTERVAL_B:
+ 476   2              case E_POSITION_TYPE_MUSIC_INTERVAL_D:
+ 477   2                  _position_ctrl_interval(position_ctrl, len, r, g, b);
+ 478   2                  break;
+ 479   2              case E_POSITION_TYPE_MUSIC_RANDOM:
+ 480   2                  _position_ctrl_music_random(position_ctrl, len, r, g, b, amplitude);
+ 481   2                  break;
+ 482   2              case E_POSITION_TYPE_MUSIC_KEEP:
+ 483   2              default:
+ 484   2                  cache_set(position_ctrl->cache_index, position_ctrl->start, len, r, g, b);
+ 485   2                  break;
+ 486   2          }
+ 487   1      }
+ 488          
+ 489          void position_ctrl(hsv_t *hsv, position_ctrl_t *position_ctrl, color_ctrl_t *color_ctrl, uint8_t fre_index
+             -)
+ 490          {
+ 491   1          data uint8_t r, g, b;
+ 492   1          data uint8_t len = POSITION_CTRL_LEN(position_ctrl);
+ 493   1      
+ 494   1          hsv_to_rgb(hsv, &r, &g, &b);
+ 495   1      
+ 496   1          if (position_ctrl->position_type >= E_POSITION_TYPE_MUSIC_KEEP)
+ 497   1          {
+ 498   2              __position_ctrl_music(r, g, b, len, position_ctrl, color_ctrl, fre_index);
+ 499   2          }
+ 500   1          else
+ 501   1          {
+ 502   2              __position_ctrl(r, g, b, len, position_ctrl, color_ctrl);
+ 503   2          }
+ 504   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2740    ----
+   CONSTANT SIZE    =    400    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----     119
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       4
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

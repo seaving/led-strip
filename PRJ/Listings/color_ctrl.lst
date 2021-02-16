@@ -1,0 +1,274 @@
+C51 COMPILER V9.53.0.0   COLOR_CTRL                                                        02/16/2021 14:57:44 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE COLOR_CTRL
+OBJECT MODULE PLACED IN .\color_ctrl.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\FRAME\color_ctrl.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;.
+                    -.\COM;..\DRV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\color_ctrl.lst) TABS(2) OBJECT(.\color_ctrl.obj)
+
+line level    source
+
+   1          #include "color_ctrl.h"
+   2          #include "timer.h"
+   3          #include "colors.h"
+   4          #include "cache.h"
+   5          
+   6          data bright_adjust_t bright_adjust = {0};
+   7          
+   8          #if 0
+              static void __bright_adjust(uint8_t *obj)
+              {
+                  if (bright_adjust.adjust <= 0)
+                      return;
+              
+                  if (bright_adjust.is_raise)
+                  {
+                      //增加亮度
+                      *obj += bright_adjust.adjust;
+                      if (*obj > 100) *obj = 100;
+                  }
+                  else
+                  {
+                      //减小亮度
+                      if (*obj > bright_adjust.adjust) *obj = *obj - bright_adjust.adjust;
+                      else *obj = 0;
+                  }
+              }
+              #else
+  28          #define __bright_adjust(obj) if (*obj > bright_adjust.adjust) *obj = bright_adjust.adjust;
+  29          #endif
+  30          
+  31          #define _color_adorn_random(ctrl) \
+  32              if (ctrl->adorn_random == true && IS_TIME_TO(ctrl->random_interval_level * 10)) \
+  33              { \
+  34                  ctrl->adorn_index = (ctrl->adorn_index + 1) % COLOR_HSV_ARRAY_ROWS; \
+  35              }
+  36          
+  37          static bool _color_random(hsv_t *hsv, color_ctrl_t *ctrl, bool need_h, bool need_s, bool need_v)
+  38          {
+  39   1          if (IS_TIME_TO(ctrl->random_interval_level * 10))
+  40   1          {
+  41   2              ctrl->random_index = (ctrl->random_index + 1) % COLOR_HSV_ARRAY_ROWS;
+  42   2      
+  43   2              if (need_h) hsv->h = COLOR_HSV_H(ctrl->random_index);
+  44   2              if (need_s) hsv->s = COLOR_HSV_S(ctrl->random_index);
+  45   2              if (need_v) hsv->v = COLOR_HSV_V(ctrl->random_index);
+  46   2      
+  47   2              return true;
+  48   2          }
+  49   1      
+  50   1          return false;
+  51   1      }
+  52          
+  53          /**
+  54           * 颜色控制
+C51 COMPILER V9.53.0.0   COLOR_CTRL                                                        02/16/2021 14:57:44 PAGE 2   
+
+  55           * 方式参考 color_ctrl_type_t
+  56          */
+  57          
+  58          static bool __color_ctrl(hsv_t *hsv, color_ctrl_t *ctrl)
+  59          {
+  60   1          data bool ret = false;
+  61   1      
+  62   1          BREATH_SET_ENABLE(&ctrl->breath, true);
+  63   1      
+  64   1          switch (ctrl->ctrl_type)
+  65   1          {
+  66   2              /**
+  67   2               * 单色
+  68   2              */
+  69   2              case E_COLOR_CTRL_TYPE_SINGLE_KEEP:
+  70   2                  BREATH_SET_ENABLE(&ctrl->breath, false);
+  71   2                  __bright_adjust(&hsv->v);
+  72   2                  break;
+  73   2              case E_COLOR_CTRL_TYPE_SINGLE_BREATH_V:
+  74   2                  ret = breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_V);
+  75   2                  break;
+  76   2              case E_COLOR_CTRL_TYPE_SINGLE_HARMONIC_V:
+  77   2                  ret = harmonic_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_V);
+  78   2                  break;
+  79   2              case E_COLOR_CTRL_TYPE_SINGLE_BREATH_S:
+  80   2                  ret = breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_S);
+  81   2                  __bright_adjust(&hsv->v);
+  82   2                  break;
+  83   2              case E_COLOR_CTRL_TYPE_SINGLE_HARMONIC_S:
+  84   2                  ret = harmonic_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_S);
+  85   2                  __bright_adjust(&hsv->v);
+  86   2                  break;
+  87   2      
+  88   2              /**
+  89   2               * 随机颜色
+  90   2              */
+  91   2              case E_COLOR_CTRL_TYPE_RANDOM_KEEP:
+  92   2                  BREATH_SET_ENABLE(&ctrl->breath, false);
+  93   2                  ret = _color_random(hsv, ctrl, true, true, true);
+  94   2                  __bright_adjust(&hsv->v);
+  95   2                  break;
+  96   2              case E_COLOR_CTRL_TYPE_RANDOM_BREATH_V:
+  97   2                  _color_random(hsv, ctrl, true, true, false);
+  98   2                  ret = breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_V);
+  99   2                  break;
+ 100   2              case E_COLOR_CTRL_TYPE_RANDOM_HARMONIC_V:
+ 101   2                  _color_random(hsv, ctrl, true, true, false);
+ 102   2                  ret = harmonic_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_V);
+ 103   2                  break;
+ 104   2              case E_COLOR_CTRL_TYPE_RANDOM_BREATH_S:
+ 105   2                  _color_random(hsv, ctrl, true, false, true);
+ 106   2                  ret = breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_S);
+ 107   2                  __bright_adjust(&hsv->v);
+ 108   2                  break;
+ 109   2              case E_COLOR_CTRL_TYPE_RANDOM_HARMONIC_S:
+ 110   2                  _color_random(hsv, ctrl, true, false, true);
+ 111   2                  ret = harmonic_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_S);
+ 112   2                  __bright_adjust(&hsv->v);
+ 113   2                  break;
+ 114   2      
+ 115   2              /**
+ 116   2               * 颜色渐变
+C51 COMPILER V9.53.0.0   COLOR_CTRL                                                        02/16/2021 14:57:44 PAGE 3   
+
+ 117   2              */
+ 118   2              case E_COLOR_CTRL_TYPE_SMOOTH_HSV:
+ 119   2                  ret = breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_H);
+ 120   2                  breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_S);
+ 121   2                  breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_V);
+ 122   2                  __bright_adjust(&hsv->v);
+ 123   2                  break;
+ 124   2              case E_COLOR_CTRL_TYPE_SMOOTH_BREATH_H:
+ 125   2                  ret = breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_H);
+ 126   2                  __bright_adjust(&hsv->v);
+ 127   2                  break;
+ 128   2              case E_COLOR_CTRL_TYPE_SMOOTH_BREATH_HV:
+ 129   2                  ret = breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_H);
+ 130   2                  breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_V);
+ 131   2                  break;
+ 132   2              case E_COLOR_CTRL_TYPE_SMOOTH_HARMONIC_V:
+ 133   2                  ret = breath_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_H);
+ 134   2                  harmonic_lamp(hsv, &ctrl->breath, E_BREATH_TYPE_V);
+ 135   2                  break;
+ 136   2      
+ 137   2              default:
+ 138   2                  BREATH_SET_ENABLE(&ctrl->breath, false);
+ 139   2                  break;
+ 140   2          }
+ 141   1      
+ 142   1          return ret;
+ 143   1      }
+ 144          
+ 145          static bool __color_ctrl_music(hsv_t *hsv, color_ctrl_t *ctrl, uint8_t fre_index, uint8_t fre_div)
+ 146          {
+ 147   1          data bool ret = false;
+ 148   1      
+ 149   1          BREATH_SET_ENABLE(&ctrl->breath, true);
+ 150   1      
+ 151   1          switch (ctrl->ctrl_type)
+ 152   1          {
+ 153   2              /**
+ 154   2               * 单色
+ 155   2              */
+ 156   2              case E_COLOR_CTRL_TYPE_MUSIC_SINGLE_KEEP:
+ 157   2                  BREATH_SET_ENABLE(&ctrl->breath, false);
+ 158   2                  __bright_adjust(&hsv->v);
+ 159   2                  break;
+ 160   2              case E_COLOR_CTRL_TYPE_MUSIC_SINGLE_BREATH_V:
+ 161   2                  ret = breath_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_V, fre_index, fre_div);
+ 162   2                  break;
+ 163   2              case E_COLOR_CTRL_TYPE_MUSIC_SINGLE_HARMONIC_V:
+ 164   2                  ret = harmonic_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_V, fre_index, fre_div);
+ 165   2                  break;
+ 166   2              case E_COLOR_CTRL_TYPE_MUSIC_SINGLE_BREATH_S:
+ 167   2                  ret = breath_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_S, fre_index, fre_div);
+ 168   2                  __bright_adjust(&hsv->v);
+ 169   2                  break;
+ 170   2      
+ 171   2              /**
+ 172   2               * 随机颜色
+ 173   2              */
+ 174   2              case E_COLOR_CTRL_TYPE_MUSIC_RANDOM_KEEP:
+ 175   2                  BREATH_SET_ENABLE(&ctrl->breath, false);
+ 176   2                  ret = _color_random(hsv, ctrl, true, true, true);
+ 177   2                  __bright_adjust(&hsv->v);
+ 178   2                  break;
+C51 COMPILER V9.53.0.0   COLOR_CTRL                                                        02/16/2021 14:57:44 PAGE 4   
+
+ 179   2              case E_COLOR_CTRL_TYPE_MUSIC_RANDOM_BREATH_V:
+ 180   2                  _color_random(hsv, ctrl, true, true, false);
+ 181   2                  ret = breath_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_V, fre_index, fre_div);
+ 182   2                  break;
+ 183   2              case E_COLOR_CTRL_TYPE_MUSIC_RANDOM_HARMONIC_V:
+ 184   2                  _color_random(hsv, ctrl, true, true, false);
+ 185   2                  ret = harmonic_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_V, fre_index, fre_div);
+ 186   2                  break;
+ 187   2              case E_COLOR_CTRL_TYPE_MUSIC_RANDOM_BREATH_S:
+ 188   2                  _color_random(hsv, ctrl, true, false, true);
+ 189   2                  ret = harmonic_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_S, fre_index, fre_div);
+ 190   2                  __bright_adjust(&hsv->v);
+ 191   2                  break;
+ 192   2      
+ 193   2              /**
+ 194   2               * 颜色渐变
+ 195   2              */
+ 196   2              case E_COLOR_CTRL_TYPE_MUSIC_SMOOTH_BREATH_H:
+ 197   2                  ret = breath_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_H, fre_index, fre_div);
+ 198   2                  __bright_adjust(&hsv->v);
+ 199   2                  break;
+ 200   2              case E_COLOR_CTRL_TYPE_MUSIC_SMOOTH_BREATH_HV:
+ 201   2                  ret = breath_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_H, fre_index, fre_div);
+ 202   2                  breath_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_V, fre_index, fre_div);
+ 203   2                  break;
+ 204   2              case E_COLOR_CTRL_TYPE_MUSIC_SMOOTH_HARMONIC_V:
+ 205   2                  ret = breath_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_H, fre_index, fre_div);
+ 206   2                  harmonic_lamp_music(hsv, &ctrl->breath, E_BREATH_TYPE_V, fre_index, fre_div);
+ 207   2                  break;
+ 208   2      
+ 209   2              default:
+ 210   2                  BREATH_SET_ENABLE(&ctrl->breath, false);
+ 211   2                  break;
+ 212   2          }
+ 213   1      
+ 214   1          return ret;
+ 215   1      }
+ 216          
+ 217          bool color_ctrl(hsv_t *hsv, color_ctrl_t *ctrl, uint8_t fre_index, uint8_t fre_div)
+ 218          {
+ 219   1          data uint8_t max;
+ 220   1      
+ 221   1          max = BREATH_GET_MAX_V(&ctrl->breath);
+ 222   1          __bright_adjust(&max);
+ 223   1          BREATH_SET_MAX_V(&ctrl->breath, max);
+ 224   1      
+ 225   1          //装饰色随机处理
+ 226   1          _color_adorn_random(ctrl);
+ 227   1      
+ 228   1          if (ctrl->ctrl_type >= E_COLOR_CTRL_TYPE_MUSIC_SINGLE_KEEP)
+ 229   1          {
+ 230   2              return __color_ctrl_music(hsv, ctrl, fre_index, fre_div);
+ 231   2          }
+ 232   1      
+ 233   1          return __color_ctrl(hsv, ctrl);
+ 234   1      }
+ 235          
+ 236          void color_ctrl_get_adorn_hsv(hsv_t *hsv, color_ctrl_t *ctrl)
+ 237          {
+ 238   1          hsv->h = COLOR_HSV_H(ctrl->adorn_index);
+ 239   1          hsv->s = COLOR_HSV_S(ctrl->adorn_index);
+ 240   1          hsv->v = COLOR_HSV_V(ctrl->adorn_index);
+C51 COMPILER V9.53.0.0   COLOR_CTRL                                                        02/16/2021 14:57:44 PAGE 5   
+
+ 241   1          __bright_adjust(&hsv->v);
+ 242   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1524    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1      40
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

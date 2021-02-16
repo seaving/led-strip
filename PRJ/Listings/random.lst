@@ -1,0 +1,103 @@
+C51 COMPILER V9.53.0.0   RANDOM                                                            02/16/2021 14:57:46 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE RANDOM
+OBJECT MODULE PLACED IN .\random.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE ..\APP\random.c OPTIMIZE(9,SPEED) BROWSE INCDIR(..\APP\FRAME;..\COM;..\D
+                    -RV;..\HAL;..\APP) DEBUG OBJECTEXTEND PRINT(.\Listings\random.lst) TABS(2) OBJECT(.\random.obj)
+
+line level    source
+
+   1          #include "random.h"
+   2          #include "cache.h"
+   3          #include "typedef.h"
+   4          #include "player.h"
+   5          
+   6          static void __random_set(flush_param_t *param, uint8_t action_index, uint8_t start, uint8_t end, position_
+             -type_t position_type)
+   7          {
+   8   1          param->color_index = param->color_index % COLOR_HSV_ARRAY1_ROWS;
+   9   1      
+  10   1          if (param->fade_interval == 0)
+  11   1              param->fade_type = E_FADE_TYPE_KEEP;
+  12   1      
+  13   1          if (param->is_static_color)
+  14   1          {
+  15   2              param->mode = E_RANDOM_MODE_SINGLE;
+  16   2          }
+  17   1      
+  18   1          if (param->mode == E_RANDOM_MODE_SINGLE)
+  19   1          {
+  20   2              flush_fade_init(param, action_index, true);
+  21   2              if (param->fade_type == E_FADE_TYPE_BREATH)
+  22   2              {
+  23   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_SINGLE_HARMONIC_
+             -V);
+  24   3              }
+  25   2          }
+  26   1          else if (param->mode == E_RANDOM_MODE_RANDOM)
+  27   1          {
+  28   2              flush_fade_init(param, action_index, false);
+  29   2              if (param->fade_type == E_FADE_TYPE_BREATH)
+  30   2              {
+  31   3                  COLOR_CTRL_SET_CTRL_TYPE(&actions[action_index].color_ctrl, E_COLOR_CTRL_TYPE_RANDOM_HARMONIC_
+             -V);
+  32   3              }
+  33   2          }
+  34   1      
+  35   1          ctrl_set(param, 1, 1, 1, 10, action_index, start, end, position_type, 0, 0, 0);
+  36   1      }
+  37          
+  38          void random_set(flush_param_t *param)
+  39          {
+  40   1          data uint8_t action_index = 0;
+  41   1      
+  42   1          switch (param->position)
+  43   1          {
+  44   2              case E_RANDOM_POSITION_RANDOM:
+  45   2                  __random_set(param, action_index, 0, 16, E_POSITION_TYPE_RANDOM);
+  46   2                  action_index ++;
+  47   2                  param->position_interval += 3;
+  48   2                  __random_set(param, action_index, 17, 32, E_POSITION_TYPE_RANDOM);
+  49   2                  action_index ++;
+  50   2                  param->position_interval += 4;
+  51   2                  __random_set(param, action_index, 33, 49, E_POSITION_TYPE_RANDOM);
+C51 COMPILER V9.53.0.0   RANDOM                                                            02/16/2021 14:57:46 PAGE 2   
+
+  52   2                  break;
+  53   2              case E_RANDOM_POSITION_RANDOM1:
+  54   2                  __random_set(param, action_index, 0, 9, E_POSITION_TYPE_RANDOM);
+  55   2                  action_index ++;
+  56   2                  param->position_interval += 3;
+  57   2                  __random_set(param, action_index, 10, 19, E_POSITION_TYPE_RANDOM);
+  58   2                  action_index ++;
+  59   2                  param->position_interval += 4;
+  60   2                  __random_set(param, action_index, 20, 29, E_POSITION_TYPE_RANDOM);
+  61   2                  action_index ++;
+  62   2                  param->position_interval += 2;
+  63   2                  __random_set(param, action_index, 30, 39, E_POSITION_TYPE_RANDOM);
+  64   2                  action_index ++;
+  65   2                  param->position_interval += 1;
+  66   2                  __random_set(param, action_index, 40, 49, E_POSITION_TYPE_RANDOM);
+  67   2                  break;
+  68   2              default:
+  69   2                  break;
+  70   2          }
+  71   1      
+  72   1          //把配置的action设置到播放器
+  73   1          player_set(0, 0, action_index, 0, true);
+  74   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    416    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      11
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
